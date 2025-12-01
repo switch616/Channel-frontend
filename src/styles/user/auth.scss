@@ -1,0 +1,86 @@
+/* 公共容器，垂直居中 */
+.container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  padding: 20px;
+}
+
+/* 通用卡片 */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(10, 30, 60, 0.15);
+  transition: box-shadow 0.3s ease;
+}
+.card:hover {
+  box-shadow: 0 18px 40px rgba(10, 30, 60, 0.25);
+}
+
+/* 通用标题 */
+.title {
+  text-align: center;
+  font-weight: 700;
+  color: #1f2a44;
+  letter-spacing: 1.2px;
+}
+
+/* 通用表单项 */
+.el-form-item {
+  margin-bottom: 22px;
+}
+
+.el-form-item label {
+  font-weight: 600;
+  color: #33475b;
+  font-size: 15px;
+}
+
+/* 输入框 */
+.el-input__inner {
+  border-radius: 6px;
+  height: 44px;
+  font-size: 14px;
+  color: #2c3e50;
+  transition: border-color 0.3s ease;
+}
+
+.el-input__inner:focus,
+.el-input__inner:hover {
+  border-color: #409eff;
+  box-shadow: 0 0 8px rgba(64, 158, 255, 0.3);
+}
+
+/* 按钮基础 */
+.el-button {
+  font-weight: 600;
+  border-radius: 8px;
+  color: #fff;
+  user-select: none;
+  transition: background 0.35s ease, box-shadow 0.3s ease;
+  background: linear-gradient(90deg, #409eff 0%, #66b1ff 100%);
+}
+
+.el-button:hover:not(:disabled) {
+  background: linear-gradient(90deg, #66b1ff 0%, #409eff 100%);
+  box-shadow: 0 6px 20px rgba(64, 158, 255, 0.45);
+}
+
+.el-button:disabled {
+  background: #a0aec0 !important;
+  cursor: not-allowed;
+  box-shadow: none !important;
+}
+
+/* 响应式适配 */
+@media (max-width: 440px) {
+  .title {
+    font-size: 24px;
+  }
+  .el-button,
+  .el-input__inner {
+    height: 40px;
+  }
+}
