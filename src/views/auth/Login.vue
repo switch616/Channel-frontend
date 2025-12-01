@@ -97,11 +97,28 @@ const loadRememberedAccount = () => {
 const submit = async () => {
   try {
     const res = await loginAPI(form)
-    const token = res.access_token
-    const expiresIn = res.expires_in || 3600  // 默认过期时间为3600秒（1小时）
+
+    // 新响应规范：{ code, msg, data, success, trace_id }
+    if (!res?.success) {
+      ElMessage.error(res?.msg || '登录失败')
+      await loadCaptcha()
+      form.captcha_text = ''
+      return
+    }
+
+    const token = res.data?.access_token
+    const expiresIn = res.data?.expires_in || 3600  // 默认过期时间为3600秒（1小时）
+
+    if (!token) {
+      ElMessage.error('登录响应异常：未获取到 Token')
+      await loadCaptcha()
+      form.captcha_text = ''
+      return
+    }
 
     // 存储 token 和过期时间
     await userStore.setToken(token, expiresIn)
+
     // 处理“记住密码”
     if (form.remember) {
       const encryptedData = encryptData({ email: form.email, password: form.password })
@@ -111,16 +128,18 @@ const submit = async () => {
     }
 
     await userStore.fetchUserProfile()
-    ElMessage.success('登录成功')
+    ElMessage.success(res?.msg || '登录成功')
+
     // 登录成功后跳转到首页并强制刷新
     router.push('/').then(() => {
       window.location.reload()
     })
   } catch (err) {
     console.log(err)
-    ElMessage.error(err?.detail || err?.message || '登录失败')
-    loadCaptcha() // 登录失败后刷新验证码
-    form.captcha_text = '' // 清空用户输入的验证码（防止再提交无效内容）
+    // HTTP 层面的错误交给 axios 拦截器，但这里兜底提示
+    ElMessage.error(err?.response?.data?.msg || err?.response?.data?.detail || err?.message || '登录失败')
+    await loadCaptcha()
+    form.captcha_text = ''
   }
 }
 

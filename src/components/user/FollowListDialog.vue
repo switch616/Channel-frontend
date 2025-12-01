@@ -149,18 +149,13 @@ const fetchList = async (reset = false) => {
     const res = await api(params)
     console.log('API响应:', res)
     
-    // 根据实际API响应结构调整数据访问路径
     let newItems = []
     let newTotal = 0
     
-    if (res.data && res.data.data) {
-      // 包装过的响应格式：{ code: 0, msg: "success", data: { total: 1, items: [...] } }
-      newItems = res.data.data.items || []
-      newTotal = res.data.data.total || 0
-    } else {
-      // 直接返回的数据格式：{ total: 1, items: [...] }
-      newItems = res.data?.items || []
-      newTotal = res.data?.total || 0
+    // 统一响应：{ code, msg, data, success }
+    if (res?.success && res.data) {
+      newItems = res.data.items || []
+      newTotal = res.data.total || 0
     }
     
     if (reset) {
@@ -195,7 +190,7 @@ const handleScroll = (e) => {
 const handleFollow = async (user) => {
   try {
     const res = await followUser(user.id)
-    if (res.data) {
+    if (res?.success && res.data) {
       user.is_followed = res.data.is_followed
       user.is_mutual = res.data.is_followed // 关注后变为互相关注
       // 更新用户store中的统计数据
@@ -226,7 +221,7 @@ const handleUnfollow = async (user) => {
     })
     
     const res = await followUser(user.id)
-    if (res.data) {
+    if (res?.success && res.data) {
       // 更新用户状态：取消关注
       user.is_followed = false
       user.is_mutual = false // 取消关注后不再是互相关注
@@ -259,7 +254,7 @@ const handleRemoveFan = async (user) => {
     })
     
     const res = await removeFan(user.id)
-    if (res.data) {
+    if (res?.success && res.data) {
       // 从列表中移除该用户
       const index = list.value.findIndex(item => item.id === user.id)
       if (index > -1) {

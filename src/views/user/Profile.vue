@@ -57,6 +57,11 @@ const loadVideos = async () => {
   try {
     const api = loadMap[activeTab.value]
     const res = await api({ page: page.value, size: pageSize })
+
+    if (!res?.success) {
+      return
+    }
+
     const data = res.data || {}
     const mappedVideos = (data.items || data || []).map(item => {
       let cover = (item.cover_image || '').replace(/\\/g, '/')

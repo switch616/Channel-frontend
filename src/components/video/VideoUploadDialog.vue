@@ -235,16 +235,32 @@ const handleSubmit = async () => {
       },
     })
 
-    const url = res.data?.data?.url || res.data?.url
+    // 统一响应结构：后端返回 ResponseSchema => { code, msg, data: { url }, success }
+    const body = res?.data
+
+    if (!body?.success) {
+      throw new Error(body?.msg || '上传失败')
+    }
+
+    const url = body?.data?.url
+    if (!url) {
+      throw new Error('上传成功但未返回视频地址')
+    }
+
     form.videoUrl = /^https?:\/\//.test(url)
       ? url
       : `${baseUrl}/${url.replace(/^\/+/, '')}`
 
     ElMessage.success('视频上传成功')
     visible.value = false
-    emit('success', res.data?.data)
+    emit('success', body.data)
   } catch (error) {
-    ElMessage.error(error.response?.data?.message || '上传失败')
+    const msg =
+      error?.response?.data?.msg ||
+      error?.response?.data?.detail ||
+      error?.message ||
+      '上传失败'
+    ElMessage.error(msg)
   } finally {
     uploading.value = false
     submitting.value = false

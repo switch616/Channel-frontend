@@ -49,6 +49,9 @@ const bannerList = ref([])
 const fetchHotBanners = async () => {
   try {
     const res = await getHotVideos({ page: 1, size: 3 })
+    if (!res?.success) {
+      return
+    }
     const data = res.data || {}
     bannerList.value = (data.items || []).slice(0, 3).map(item => ({
       id: item.id,

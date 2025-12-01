@@ -281,19 +281,16 @@ const isFollower = ref(false)
 
 const refreshVideoDetail = async () => {
   const res = await getVideoDetail(videoId)
+
+  // 统一响应：{ code, msg, data, success }
+  if (!res?.success) {
+    throw new Error(res?.msg || '获取视频详情失败')
+  }
+
   videoDetail.value = res.data
-  isFollowed.value = res.data.uploader?.is_followed || false
-  isMutual.value = res.data.uploader?.is_mutual || false
-  isFollower.value = res.data.uploader?.is_follower || false
-  
-  console.log('[DEBUG] 视频详情API响应:', {
-    uploader: res.data.uploader,
-    isFollowed: isFollowed.value,
-    isMutual: isMutual.value,
-    isFollower: isFollower.value
-  })
-  
-  // 其它状态如粉丝数、作者信息等也会自动刷新
+  isFollowed.value = res.data?.uploader?.is_followed || false
+  isMutual.value = res.data?.uploader?.is_mutual || false
+  isFollower.value = res.data?.uploader?.is_follower || false
 }
 
 onMounted(async () => {
@@ -359,6 +356,9 @@ const currentVideoOwnerId = computed(() => {
 const handleLike = async () => {
   try {
     const res = await likeVideo(videoId)
+    if (!res?.success) {
+      throw new Error(res?.msg || '点赞失败')
+    }
     if (res.data) {
       videoDetail.value.like_count = res.data.like_count
       isLiked.value = res.data.is_liked
@@ -373,6 +373,9 @@ const handleLike = async () => {
 const handleFavorite = async () => {
   try {
     const res = await favoriteVideo(videoId)
+    if (!res?.success) {
+      throw new Error(res?.msg || '收藏失败')
+    }
     if (res.data) {
       videoDetail.value.collect_count = res.data.collect_count
       isFavorited.value = res.data.is_collected
@@ -400,21 +403,16 @@ const follow = async () => {
         type: 'warning',
       })
       const res = await followUser(author.value.id)
-      
-      console.log('[DEBUG] 取消关注API响应:', res.data)
-      
+      if (!res?.success) {
+        throw new Error(res?.msg || '取消关注失败')
+      }
+
       // 立即更新本地状态
       if (res.data) {
         isFollowed.value = res.data.is_followed
         isMutual.value = res.data.is_mutual
         isFollower.value = res.data.is_follower
-        
-        console.log('[DEBUG] 更新后的关注状态:', {
-          isFollowed: isFollowed.value,
-          isMutual: isMutual.value,
-          isFollower: isFollower.value
-        })
-        
+
         userStore.updateFollowStats(res.data.following_count, res.data.follower_count)
         // 触发关注事件，通知其他用户更新数据
         eventBus.emit(EVENTS.USER_FOLLOW_UPDATED, {
@@ -434,21 +432,16 @@ const follow = async () => {
     // 关注或回关
     try {
       const res = await followUser(author.value.id)
-      
-      console.log('[DEBUG] 关注API响应:', res.data)
-      
+      if (!res?.success) {
+        throw new Error(res?.msg || '关注失败')
+      }
+
       // 立即更新本地状态
       if (res.data) {
         isFollowed.value = res.data.is_followed
         isMutual.value = res.data.is_mutual
         isFollower.value = res.data.is_follower
-        
-        console.log('[DEBUG] 更新后的关注状态:', {
-          isFollowed: isFollowed.value,
-          isMutual: isMutual.value,
-          isFollower: isFollower.value
-        })
-        
+
         userStore.updateFollowStats(res.data.following_count, res.data.follower_count)
         // 触发关注事件，通知其他用户更新数据
         eventBus.emit(EVENTS.USER_FOLLOW_UPDATED, {
@@ -462,14 +455,12 @@ const follow = async () => {
       }
       
       // 根据关注状态显示不同的提示
-      if (res.data) {
-        if (res.data.is_mutual) {
-          ElMessage.success('互相关注成功！')
-        } else if (res.data.is_followed && res.data.is_follower) {
-          ElMessage.success('回关成功！')
-        } else if (res.data.is_followed) {
-          ElMessage.success('关注成功！')
-        }
+      if (res.data?.is_mutual) {
+        ElMessage.success('互相关注成功！')
+      } else if (res.data?.is_followed && res.data?.is_follower) {
+        ElMessage.success('回关成功！')
+      } else if (res.data?.is_followed) {
+        ElMessage.success('关注成功！')
       }
     } catch (error) {
       ElMessage.error('关注失败')

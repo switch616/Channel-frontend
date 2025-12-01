@@ -142,6 +142,9 @@ function goToDetail(id) {
 
 const fetchVideos = async () => {
   const res = await getHotVideos({ page: 1, size: 20 })
+  if (!res?.success) {
+    return
+  }
   const data = res.data || {}
   videoList.value = (data.items || []).map(item => ({
     id: item.id,
@@ -270,6 +273,10 @@ const loadComments = async () => {
   if (!video) return
   try {
     const res = await getVideoCommentTree(video.id)
+    if (!res?.success) {
+      comments.value = []
+      return
+    }
     comments.value = (res.data || []).map(mapComment)
   } catch {
     comments.value = []

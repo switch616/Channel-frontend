@@ -26,6 +26,9 @@ const loadVideos = async () => {
   loading.value = true
   try {
     const res = await getHotVideos({ page: page.value, size: pageSize })
+    if (!res?.success) {
+      return
+    }
     const data = res.data || {}
     const mappedVideos = (data.items || []).map(item => ({
       id: item.id,

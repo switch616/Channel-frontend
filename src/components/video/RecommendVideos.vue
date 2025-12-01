@@ -33,6 +33,9 @@ const loadVideos = async () => {
       page: page.value,
       size: pageSize,
     })
+    if (!res?.success) {
+      return
+    }
     const data = res.data || {}
 
     const mappedVideos = (data.items || []).map(item => ({

@@ -111,7 +111,8 @@ const handleDelete = async (id) => {
   } else {
     return
   }
-  if (res && res.code === 0) {
+  // 统一响应结构：成功时 success=true
+  if (res && res.success) {
     emit('refresh')
   }
 }

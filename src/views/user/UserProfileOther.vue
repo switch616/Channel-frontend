@@ -72,6 +72,9 @@ const loadVideos = async () => {
   loading.value = true
   try {
     const res = await getUserVideos(userId, { page: page.value, size: pageSize })
+    if (!res?.success) {
+      return
+    }
     const data = res.data || {}
     const mappedVideos = (data.items || data || []).map(item => {
       let cover = (item.cover_image || '').replace(/\\/g, '/')
@@ -116,27 +119,15 @@ const fetchProfile = async () => {
   loadingProfile.value = true
   try {
     const res = await getUserProfile(userId)
-    console.log('用户资料响应:', res);
-    
-    if (res.data) {
-      user.value = res.data
-      // 从用户资料响应中获取关注状态
-      isFollowed.value = !!res.data.is_followed
-      isMutual.value = !!res.data.is_mutual
-      isFollower.value = !!res.data.is_follower
-      
-      console.log('用户资料:', res.data);
-      console.log('关注状态:', { 
-        isFollowed: isFollowed.value, 
-        isMutual: isMutual.value, 
-        isFollower: isFollower.value 
-      });
-    } else {
-      user.value = {}
-      isFollowed.value = false
-      isMutual.value = false
-      isFollower.value = false
+    if (!res?.success) {
+      throw new Error(res?.msg || '获取用户资料失败')
     }
+
+    user.value = res.data || {}
+    // 从用户资料响应中获取关注状态
+    isFollowed.value = !!res.data?.is_followed
+    isMutual.value = !!res.data?.is_mutual
+    isFollower.value = !!res.data?.is_follower
   } catch (error) {
     console.error('获取用户资料失败:', error)
     user.value = {}
@@ -151,19 +142,15 @@ const fetchProfile = async () => {
 const handleFollow = async () => {
   try {
     const res = await followUser(userId)
-    console.log('关注操作响应:', res);
-    
+    if (!res?.success) {
+      throw new Error(res?.msg || '关注失败')
+    }
+
     if (res.data) {
       isFollowed.value = !!res.data.is_followed
       isMutual.value = !!res.data.is_mutual
       isFollower.value = !!res.data.is_follower
-      console.log('关注状态更新:', { 
-        isFollowed: isFollowed.value, 
-        isMutual: isMutual.value, 
-        isFollower: isFollower.value 
-      });
-      
-      // 根据关注状态显示不同的提示
+
       if (isMutual.value) {
         ElMessage.success('互相关注成功！')
       } else if (isFollowed.value && isFollower.value) {
@@ -192,17 +179,14 @@ const handleUnfollow = async () => {
     )
     
     const res = await followUser(userId) // 使用同一个API，后端会根据当前状态切换
-    console.log('取消关注操作响应:', res);
-    
+    if (!res?.success) {
+      throw new Error(res?.msg || '取消关注失败')
+    }
+
     if (res.data) {
       isFollowed.value = !!res.data.is_followed
       isMutual.value = !!res.data.is_mutual
       isFollower.value = !!res.data.is_follower
-      console.log('关注状态更新:', { 
-        isFollowed: isFollowed.value, 
-        isMutual: isMutual.value, 
-        isFollower: isFollower.value 
-      });
       ElMessage.success('已取消关注')
     }
   } catch (e) {

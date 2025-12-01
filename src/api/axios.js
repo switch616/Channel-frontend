@@ -28,7 +28,17 @@ service.interceptors.request.use(
 // 响应拦截器：统一错误处理 & Token 过期跳转登录页
 service.interceptors.response.use(
   (response) => {
-    return response.data
+    const res = response.data
+
+    // 统一业务响应规范：如果包含 code/success 字段，则认为是业务响应
+    if (res && typeof res === 'object' && 'code' in res && 'success' in res) {
+      // 对于 success = false 的情况，不抛出 HTTP 错误，让调用方自己基于 code 处理
+      // 这里只做最小处理：直接返回整体结构 { code, msg, data, success, trace_id }
+      return res
+    }
+
+    // 其他情况（如验证码图片、第三方接口直透等），保持原样
+    return res
   },
   (error) => {
     const status = error.response?.status

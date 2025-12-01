@@ -129,15 +129,22 @@ const sendCode = async () => {
 
   try {
     isSending.value = true
-    await sendEmailCodeAPI(form.email)
-    ElMessage.success('验证码已发送')
+    const res = await sendEmailCodeAPI(form.email)
+
+    // 目前该接口仍返回 { message }，如果后续也改为统一响应，可直接使用 res.msg / res.success
+    if (res?.success === false) {
+      ElMessage.error(res?.msg || '验证码发送失败')
+      return
+    }
+
+    ElMessage.success(res?.msg || res?.message || '验证码已发送')
     countdown.value = 60
     timer = setInterval(() => {
       countdown.value--
       if (countdown.value === 0) clearInterval(timer)
     }, 1000)
   } catch (err) {
-    ElMessage.error(err?.response?.data?.detail || '验证码发送失败')
+    ElMessage.error(err?.response?.data?.msg || err?.response?.data?.detail || err?.message || '验证码发送失败')
   } finally {
     isSending.value = false
   }
@@ -148,15 +155,32 @@ const register = async () => {
     if (!valid) return
 
     try {
-      await registerAPI(form)
-      ElMessage.success('注册成功')
+      // 只提交后端需要的字段，避免多余字段导致校验失败
+      const payload = {
+        email: form.email,
+        username: form.username,
+        phone_number: form.phone_number,
+        address: form.address,
+        code: form.code,
+        password: form.password
+      }
+
+      const res = await registerAPI(payload)
+
+      // 新响应规范：{ code, msg, data, success, trace_id }
+      if (!res?.success) {
+        ElMessage.error(res?.msg || '注册失败')
+        return
+      }
+
+      ElMessage.success(res?.msg || '注册成功')
 
       // 注册成功后延迟跳转到登录页面
       setTimeout(() => {
         router.push('/login')
       }, 2000)  // 2秒后跳转
     } catch (e) {
-      ElMessage.error(e?.response?.data?.detail || '注册失败')
+      ElMessage.error(e?.response?.data?.msg || e?.response?.data?.detail || e?.message || '注册失败')
     }
   })
 }

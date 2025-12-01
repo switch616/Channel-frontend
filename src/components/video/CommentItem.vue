@@ -146,7 +146,7 @@ const canDelete = computed(() => {
 const handleLike = async () => {
   try {
     const res = await likeComment(props.comment.id)
-    if (res.data && res.data.success) {
+    if (res?.success && res.data) {
       // 直接更新当前评论的点赞数
       Object.assign(props.comment, {
         likes: res.data.like_count,
@@ -164,7 +164,7 @@ const handleLike = async () => {
 const handleDislike = async () => {
   try {
     const res = await dislikeComment(props.comment.id)
-    if (res.data && res.data.success) {
+    if (res?.success && res.data) {
       // 直接更新当前评论的踩数
       Object.assign(props.comment, {
         likes: res.data.like_count,
@@ -204,7 +204,7 @@ const submitReply = async () => {
       parent_id: props.comment.id
     })
     
-    if (res.data) {
+    if (res?.success && res.data) {
       const newReply = mapReply(res.data)
       // 直接添加到本地replies数组
       replies.value.unshift(newReply)
@@ -234,7 +234,7 @@ const loadReplies = async () => {
       size: 50
     })
     
-    const mappedReplies = (res.data?.items || []).map(mapReply)
+    const mappedReplies = (res?.data?.items || []).map(mapReply)
     replies.value = mappedReplies
   } catch (error) {
     console.error('加载回复失败:', error)
@@ -270,7 +270,7 @@ const handleReply = async (replyData) => {
       parent_id: replyData.parent.id
     })
     
-    if (res.data) {
+    if (res?.success && res.data) {
       const newReply = mapReply(res.data)
       // 直接添加到本地replies数组
       replies.value.unshift(newReply)
@@ -309,7 +309,7 @@ const handleChildReply = async (replyData) => {
       parent_id: replyData.parent.id
     })
     
-    if (res.data) {
+    if (res?.success && res.data) {
       const newReply = mapReply(res.data)
       // 找到对应的子评论并添加回复
       const targetChild = replies.value.find(child => child.id === replyData.parent.id)
