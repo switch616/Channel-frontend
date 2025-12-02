@@ -27,14 +27,17 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { getMyVideos, getMyLikeVideos, getMyFavoriteVideos, getWatchHistory } from '@/api/video'
 import { useUserStore } from '@/stores/user'
 import UserHeader from '@/components/user/UserHeader.vue'
 import UserTabs from '@/components/user/UserTabs.vue'
 import VideoGrid from '@/components/video/VideoGrid.vue'
+import { getToken } from '@/utils/auth'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 const userStore = useUserStore()
+const router = useRouter()
 
 const activeTab = ref('videos')
 const videoList = ref([])
@@ -106,10 +109,25 @@ watch(activeTab, async () => {
 })
 
 onMounted(async () => {
+  // 检查是否有 token，没有则重定向到登录页
+  const token = getToken()
+  if (!token) {
+    router.push('/login')
+    return
+  }
+  
   try {
     await userStore.fetchUserProfile()
+    // 如果获取用户资料后用户仍为 null，重定向到登录页
+    if (!userStore.user) {
+      router.push('/login')
+      return
+    }
   } catch (error) {
     console.error('获取个人资料失败:', error)
+    // 获取失败时重定向到登录页
+    router.push('/login')
+    return
   }
   await loadVideos()
 })

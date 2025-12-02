@@ -18,8 +18,12 @@ function setupAuthGuard(router) {
       return next('/login')
     }
     
-    // 路由级别的预加载
-    if (to.name === 'UserProfile' || to.path === '/user/profile') {
+    // 路由级别的预加载 - 只有在有 token 且目标路由不是登录页的情况下才预加载
+    // 避免退出登录跳转到登录页时触发预加载
+    if (token && 
+        to.path !== '/login' && 
+        to.name !== 'Login' && 
+        (to.name === 'UserProfile' || to.path === '/user/profile')) {
       // 预加载用户资料
       preloadUserProfile()
     }

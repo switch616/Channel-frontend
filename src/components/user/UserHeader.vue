@@ -1,5 +1,5 @@
 <template>
-  <div class="user-header">
+  <div class="user-header" v-if="user">
     <el-row align="middle">
       <el-col :xs="24" :sm="6" class="avatar-col">
         <el-avatar :size="80" :src="avatarUrl" />
@@ -50,7 +50,7 @@
     <FollowListDialog
       :visible="showFollowDialog"
       :type="followDialogType"
-      :userId="user.id"
+      :userId="user?.id"
       @close="closeFollowDialog"
     />
     <ProfileEditDialog ref="profileEditRef" @success="handleProfileUpdate" />
@@ -136,15 +136,18 @@ const emit = defineEmits(['follow'])
 // 视频上传成功处理
 const handleVideoUploadSuccess = (videoData) => {
   // 更新用户视频数量
-  userStore.setUser({
-    ...userStore.user,
-    video_count: (userStore.user.video_count || 0) + 1
-  })
+  if (userStore.user) {
+    userStore.setUser({
+      ...userStore.user,
+      video_count: (userStore.user.video_count || 0) + 1
+    })
+  }
   emit('video-upload-success') // 通知父组件刷新视频列表
 }
 
 // 复制功能
 const copyUniqueId = () => {
+  if (!user.value) return
   navigator.clipboard.writeText(user.value.unique_id)
   ElMessage.success('ID已复制')
 }

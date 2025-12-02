@@ -1,4 +1,5 @@
 import { useUserStore } from '@/stores/user'
+import { getToken } from '@/utils/auth'
 
 // 预加载管理器
 class PreloadManager {
@@ -12,6 +13,14 @@ class PreloadManager {
     if (this.isPreloading) return
     
     const userStore = useUserStore()
+    
+    // 双重检查：既检查 store 中的 token，也检查存储中的 token
+    // 避免退出登录时 store 还没更新但存储已清除的情况
+    const token = getToken()
+    if (!token || !userStore.token) {
+      return
+    }
+    
     this.isPreloading = true
     
     try {

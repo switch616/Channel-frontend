@@ -175,11 +175,15 @@ export const useUserStore = defineStore('user', {
     },
 
     logout(router) {
+      // 先清除 store 中的状态
       this.token = ''
       this.user = null
       this.permissions = []
       this.roles = []
       this.isOnline = false
+      // 清除缓存时间戳
+      this.lastProfileFetch = null
+      // 再清除存储中的 token（确保顺序，避免时序问题）
       removeToken()
       // 登出时清理事件监听
       this.clearEventListeners()
