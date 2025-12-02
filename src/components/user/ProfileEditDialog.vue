@@ -46,12 +46,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, type Ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { updateUserProfileAPI } from '@/api/auth'
 
-const emit = defineEmits(['success'])
+const emit = defineEmits<{
+  (e: 'success'): void
+}>()
 
 // Store
 const userStore = useUserStore()
@@ -63,7 +65,7 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')
 const uploadUrl = `${baseUrl}/user/upload-avatar`
 
 // 表单引用
-const formRef = ref(null)
+const formRef = ref<{ validate: () => Promise<boolean> } | null>(null)
 
 // 弹窗控制
 const visible = ref(false)
@@ -72,7 +74,12 @@ const visible = ref(false)
 const submitting = ref(false)
 
 // 表单数据
-const form = reactive({
+const form = reactive<{
+  username: string
+  gender: string
+  bio: string
+  profile_picture: string
+}>({
   username: '',
   gender: 'male', // 默认值设为男
   bio: '',
@@ -94,13 +101,13 @@ const open = () => {
 }
 
 // 获取完整头像URL
-const getFullAvatarUrl = (path) => {
+const getFullAvatarUrl = (path?: string | null) => {
   if (!path) return `${baseUrl}/media/avatars/default.png`
   return /^https?:\/\//.test(path) ? path : `${baseUrl}/${path.replace(/^\/+/, '')}`
 }
 
 // 上传成功处理
-const handleAvatarSuccess = (response) => {
+const handleAvatarSuccess = (response: any) => {
   const url = response.url || response.data?.url
   if (!url) return ElMessage.error('上传失败')
 
@@ -117,7 +124,7 @@ const handleAvatarSuccess = (response) => {
 }
 
 // 上传前校验
-const beforeAvatarUpload = (file) => {
+const beforeAvatarUpload = (file: File) => {
   const isImage = ['image/jpeg', 'image/png'].includes(file.type)
   const isSizeOk = file.size / 1024 / 1024 < 2
 
@@ -136,7 +143,7 @@ const beforeAvatarUpload = (file) => {
 // 保存提交
 const handleSave = async () => {
   try {
-    const valid = await formRef.value.validate()
+    const valid = await formRef.value!.validate()
     if (!valid) return
 
     submitting.value = true

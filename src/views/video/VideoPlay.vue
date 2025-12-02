@@ -206,11 +206,8 @@ import {
   addComment, 
   likeComment as likeCommentAPI, 
   dislikeComment as dislikeCommentAPI,
-  getCommentReplies,
-  getVideoCommentTree,
   deleteComment
 } from '@/api/video'
-import VideoPlayer from '@/components/video/VideoPlayer.vue'
 import CommentItem from '@/components/video/CommentItem.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { StarFilled, CollectionTag, ChatDotRound } from '@element-plus/icons-vue'
@@ -231,11 +228,11 @@ const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
 
 const route = useRoute()
-const videoId = route.params.id
-const videoDetail = ref(null)
+const videoId = route.params.id as string
+const videoDetail = ref<any | null>(null)
 const loading = ref(true)
 const videoReady = ref(false)
-let loadingTimeout = null
+let loadingTimeout: number | null = null
 
 function handleWaiting() { 
   // 只有在视频真正缓冲时才显示加载状态
@@ -473,7 +470,7 @@ const startPlay = () => {
 }
 
 // 防止键盘事件导致页面刷新
-const handleKeydown = (event) => {
+const handleKeydown = (event: KeyboardEvent) => {
   // 阻止空格键、方向键等默认行为
   if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
     event.preventDefault()
@@ -483,11 +480,11 @@ const handleKeydown = (event) => {
 // 评论相关
 const commentText = ref('')
 const commentInputRef = ref()
-const comments = ref([])
+const comments = ref<any[]>([])
 const commentPage = ref(1)
 const commentSize = ref(20)
 const commentTotal = ref(0)
-const commentOrder = ref('latest') // 'latest' 或 'hottest'
+const commentOrder = ref<'latest' | 'hottest'>('latest') // 'latest' 或 'hottest'
 const commentLoading = ref(false)
 const hasMoreComments = ref(true)
 
@@ -530,7 +527,7 @@ const loadComments = async (reset = false) => {
   }
 }
 
-const changeCommentOrder = async (order) => {
+const changeCommentOrder = async (order: 'latest' | 'hottest') => {
   commentOrder.value = order
   await loadComments(true)
 }
@@ -541,7 +538,7 @@ const loadMoreComments = async () => {
   }
 }
 
-function mapComment(item) {
+function mapComment(item: any) {
   // 映射后端结构到前端结构
   return {
     ...item,
@@ -590,7 +587,7 @@ const submitComment = async () => {
   }
 }
 
-const handleLikeComment = async (comment) => {
+const handleLikeComment = async (comment: any) => {
   try {
     const res = await likeCommentAPI(comment.id)
     
@@ -614,7 +611,7 @@ const handleLikeComment = async (comment) => {
   }
 }
 
-const handleDislikeComment = async (comment) => {
+const handleDislikeComment = async (comment: any) => {
   try {
     const res = await dislikeCommentAPI(comment.id)
     
@@ -639,7 +636,7 @@ const handleDislikeComment = async (comment) => {
 }
 
 // 递归查找评论
-const findCommentById = (commentList, commentId) => {
+const findCommentById = (commentList: any[], commentId: number | string): any | null => {
   for (const comment of commentList) {
     // 确保ID类型匹配
     if (comment.id == commentId) {
@@ -661,7 +658,7 @@ const findCommentById = (commentList, commentId) => {
 
 
 
-const handleReplyComment = async ({ parent, content }) => {
+const handleReplyComment = async ({ parent, content }: { parent: any; content: string }) => {
   try {
     const res = await addComment(videoId, {
       video_id: parseInt(videoId),
@@ -692,7 +689,7 @@ const handleReplyComment = async ({ parent, content }) => {
   }
 }
 
-const handleDeleteComment = async (comment) => {
+const handleDeleteComment = async (comment: any) => {
   try {
     await ElMessageBox.confirm('确定要删除这条评论吗？', '提示', {
       confirmButtonText: '删除',
@@ -716,7 +713,7 @@ const handleDeleteComment = async (comment) => {
 }
 
 // 递归移除评论
-const removeCommentById = (commentList, commentId) => {
+const removeCommentById = (commentList: any[], commentId: number | string): boolean => {
   for (let i = 0; i < commentList.length; i++) {
     if (commentList[i].id === commentId) {
       commentList.splice(i, 1)

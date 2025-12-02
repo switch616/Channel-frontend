@@ -46,17 +46,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, type PropType } from 'vue'
+
+type InputType = 'text' | 'password' | 'email' | 'number' | 'tel' | 'url'
+type InputSize = 'large' | 'default' | 'small'
+type InputStatus = '' | 'error' | 'warning' | 'success'
 
 const props = defineProps({
   modelValue: {
-    type: [String, Number],
+    type: [String, Number] as PropType<string | number>,
     default: ''
   },
   type: {
-    type: String,
+    type: String as PropType<InputType>,
     default: 'text',
-    validator: (value) => ['text', 'password', 'email', 'number', 'tel', 'url'].includes(value)
+    validator: (value: InputType) => ['text', 'password', 'email', 'number', 'tel', 'url'].includes(value)
   },
   label: {
     type: String,
@@ -79,7 +83,7 @@ const props = defineProps({
     default: false
   },
   maxlength: {
-    type: Number,
+    type: Number as PropType<number | null>,
     default: null
   },
   showWordLimit: {
@@ -91,16 +95,16 @@ const props = defineProps({
     default: false
   },
   size: {
-    type: String,
+    type: String as PropType<InputSize>,
     default: 'default',
-    validator: (value) => ['large', 'default', 'small'].includes(value)
+    validator: (value: InputSize) => ['large', 'default', 'small'].includes(value)
   },
   prefixIcon: {
-    type: [String, Object],
+    type: [String, Object] as PropType<string | object | null>,
     default: null
   },
   suffixIcon: {
-    type: [String, Object],
+    type: [String, Object] as PropType<string | object | null>,
     default: null
   },
   errorMessage: {
@@ -112,22 +116,22 @@ const props = defineProps({
     default: ''
   },
   status: {
-    type: String,
+    type: String as PropType<InputStatus>,
     default: '',
-    validator: (value) => ['', 'error', 'warning', 'success'].includes(value)
+    validator: (value: InputStatus) => ['', 'error', 'warning', 'success'].includes(value)
   }
 })
 
-const emit = defineEmits([
-  'update:modelValue',
-  'input',
-  'change',
-  'focus',
-  'blur',
-  'clear'
-])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string | number): void
+  (e: 'input', value: string | number): void
+  (e: 'change', value: string | number): void
+  (e: 'focus', event: FocusEvent): void
+  (e: 'blur', event: FocusEvent): void
+  (e: 'clear'): void
+}>()
 
-const inputValue = ref(props.modelValue)
+const inputValue = ref<string | number>(props.modelValue)
 
 // 监听外部值变化
 watch(() => props.modelValue, (newValue) => {
@@ -157,19 +161,19 @@ const inputWrapperClass = computed(() => {
   }
 })
 
-const handleInput = (value) => {
+const handleInput = (value: string | number) => {
   emit('input', value)
 }
 
-const handleChange = (value) => {
+const handleChange = (value: string | number) => {
   emit('change', value)
 }
 
-const handleFocus = (event) => {
+const handleFocus = (event: FocusEvent) => {
   emit('focus', event)
 }
 
-const handleBlur = (event) => {
+const handleBlur = (event: FocusEvent) => {
   emit('blur', event)
 }
 

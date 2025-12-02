@@ -77,7 +77,7 @@ const router = useRouter()
 
 const loadCaptcha = async () => {
   try {
-    const res = await getImageAerificationCode()
+    const res:any = await getImageAerificationCode()
     
     // 验证码API直接返回 { captcha_id, image_base64 }，不是包装在统一响应格式中
     // 但如果后端改为统一格式，也兼容处理

@@ -54,14 +54,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, type PropType } from 'vue'
 import VideoCard from './VideoCard.vue'
 import { deleteLike, deleteCollection, deleteHistory } from '@/api/video'
 import { Refresh } from '@element-plus/icons-vue'
 
+interface VideoItem {
+  id: number | string
+  [key: string]: unknown
+}
+
+type TabType = 'videos' | 'likes' | 'favorites' | 'history'
+
 const props = defineProps({
   videos: {
-    type: Array,
+    type: Array as PropType<VideoItem[]>,
     required: true,
   },
   loading: {
@@ -81,12 +88,15 @@ const props = defineProps({
     default: false,
   },
   tabType: {
-    type: String,
+    type: String as PropType<TabType>,
     default: 'videos', // 新增tabType，父组件传递
   },
 })
 
-const emit = defineEmits(['load-more','refresh'])
+const emit = defineEmits<{
+  (e: 'load-more'): void
+  (e: 'refresh'): void
+}>()
 
 const handleLoadMore = () => {
   if (!props.loading && !props.finished) {
@@ -100,7 +110,7 @@ const handleRefresh = () => {
   }
 }
 
-const handleDelete = async (id) => {
+const handleDelete = async (id: number | string) => {
   let res
   if (props.tabType === 'likes') {
     res = await deleteLike(id)

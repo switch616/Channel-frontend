@@ -23,7 +23,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import { Star } from '@element-plus/icons-vue'
 import { getToken } from '@/utils/auth'
 import { useRouter } from 'vue-router'
@@ -59,7 +58,7 @@ const handleCardClick = () => {
   }
 }
 
-const formatDuration = (seconds) => {
+const formatDuration = (seconds: number) => {
   if (!seconds || seconds <= 0) return '00:00'
   const m = Math.floor(seconds / 60)
   const s = seconds % 60

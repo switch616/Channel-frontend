@@ -23,10 +23,10 @@ const menuList = sidebarMenu
 const router = useRouter()
 const route = useRoute()
 
-const goSection = (name) => {
+const goSection = (name: string) => {
   router.push({ name })
 }
-const isActive = (name) => route.name === name
+const isActive = (name: string) => route.name === name
 </script>
 
 <style scoped>

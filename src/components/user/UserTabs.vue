@@ -16,17 +16,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, type PropType } from 'vue'
+
+type TabName = 'videos' | 'likes' | 'favorites' | 'history'
 
 const props = defineProps({
   modelValue: {
-    type: String,
+    type: String as PropType<TabName>,
     default: 'videos',
   },
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: TabName): void
+}>()
 
-const internalTab = ref(props.modelValue)
+const internalTab = ref<TabName>(props.modelValue)
 
 watch(
   () => props.modelValue,
@@ -35,7 +39,7 @@ watch(
   }
 )
 
-const onTabClick = (tab) => {
+const onTabClick = (tab: { paneName: TabName }) => {
   emit('update:modelValue', tab.paneName)
 }
 </script>

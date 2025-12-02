@@ -17,7 +17,27 @@ import { getRecommendVideos } from '@/api/video'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')
 
-const videoList = ref([])
+interface RawVideoItem {
+  id: number | string
+  title: string
+  uploader_username: string
+  cover_image: string
+  file_path: string
+  duration: number
+  like_count: number
+}
+
+interface VideoCardItem {
+  id: number | string
+  title: string
+  user: string
+  cover_image: string
+  videoUrl: string
+  duration: number
+  like_count: number
+}
+
+const videoList = ref<VideoCardItem[]>([])
 const loading = ref(false)
 const finished = ref(false)
 const page = ref(1)
@@ -38,7 +58,7 @@ const loadVideos = async () => {
     }
     const data = res.data || {}
 
-    const mappedVideos = (data.items || []).map(item => ({
+    const mappedVideos: VideoCardItem[] = (data.items || []).map((item: RawVideoItem) => ({
       id: item.id,
       title: item.title,
       user: item.uploader_username,

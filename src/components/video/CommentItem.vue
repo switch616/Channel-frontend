@@ -100,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import CommentItem from './CommentItem.vue'
 import { getCommentReplies, likeComment, dislikeComment, addComment } from '@/api/video'
@@ -115,30 +115,44 @@ function resolveUrl(path) {
   return `${baseUrl}/${normalizedPath.replace(/^\/+/, '')}`
 }
 
-const props = defineProps({
-  comment: Object,
-  level: {
-    type: Number,
-    default: 0
-  },
-  children: {
-    type: Array,
-    default: () => []
-  },
-  userId: Number,
-  videoOwnerId: Number
-})
+interface CommentModel {
+  id: number
+  video_id: number
+  user_id: number
+  username: string
+  avatar?: string
+  time: string
+  content: string
+  likes?: number
+  dislikes?: number
+  replyCount?: number
+  replies?: CommentModel[]
+  children?: CommentModel[]
+}
 
-const emit = defineEmits(['like', 'dislike', 'reply', 'delete'])
+const props = defineProps<{
+  comment: CommentModel
+  level?: number
+  children?: CommentModel[]
+  userId?: number
+  videoOwnerId?: number
+}>()
+
+const emit = defineEmits<{
+  (e: 'like', comment: CommentModel): void
+  (e: 'dislike', comment: CommentModel): void
+  (e: 'reply', payload: { parent: CommentModel; content: string }): void
+  (e: 'delete', comment: CommentModel): void
+}>()
 const showReplies = ref(false)
 const showReply = ref(false)
 const replyText = ref('')
-const replies = ref([])
+const replies = ref<CommentModel[]>([])
 const repliesLoading = ref(false)
 const showDeepComments = ref(false)
 
 const canDelete = computed(() => {
-  return Number(props.userId) > 0 &&
+  return !!props.userId &&
     (props.userId === props.comment.user_id || props.userId === props.videoOwnerId)
 })
 
@@ -244,7 +258,7 @@ const loadReplies = async () => {
   }
 }
 
-const mapReply = (item) => {
+const mapReply = (item: any): CommentModel => {
   return {
     ...item,
     id: parseInt(item.id), // 确保ID是数字类型
@@ -261,7 +275,7 @@ const mapReply = (item) => {
   }
 }
 
-const handleReply = async (replyData) => {
+const handleReply = async (replyData: { parent: CommentModel; content: string }) => {
   // 处理多级回复
   try {
     const res = await addComment(props.comment.video_id, {
@@ -287,7 +301,7 @@ const handleReply = async (replyData) => {
   }
 }
 
-const handleChildDelete = (childComment) => {
+const handleChildDelete = (childComment: CommentModel) => {
   // 从本地replies中移除
   const index = replies.value.findIndex(reply => reply.id === childComment.id)
   if (index > -1) {
@@ -300,7 +314,7 @@ const handleChildDelete = (childComment) => {
   emit('delete', childComment)
 }
 
-const handleChildReply = async (replyData) => {
+const handleChildReply = async (replyData: { parent: CommentModel; content: string }) => {
   // 处理子评论的回复
   try {
     const res = await addComment(props.comment.video_id, {
@@ -342,7 +356,7 @@ const toggleDeepComments = () => {
   showDeepComments.value = !showDeepComments.value
 }
 
-const getCommentIndent = (level) => {
+const getCommentIndent = (level: number) => {
   // 设置最大缩进级别为2层，超过后不再缩进
   const maxIndentLevel = 2
   const indentPerLevel = 20

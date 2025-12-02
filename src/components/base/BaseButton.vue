@@ -21,19 +21,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type PropType } from 'vue'
 import { Loading } from '@element-plus/icons-vue'
+
+type ButtonType = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'text'
+type ButtonSize = 'large' | 'default' | 'small'
 
 const props = defineProps({
   type: {
-    type: String,
+    type: String as PropType<ButtonType>,
     default: 'default',
-    validator: (value) => ['default', 'primary', 'success', 'warning', 'danger', 'info', 'text'].includes(value)
+    validator: (value: ButtonType) =>
+      ['default', 'primary', 'success', 'warning', 'danger', 'info', 'text'].includes(value)
   },
   size: {
-    type: String,
+    type: String as PropType<ButtonSize>,
     default: 'default',
-    validator: (value) => ['large', 'default', 'small'].includes(value)
+    validator: (value: ButtonSize) => ['large', 'default', 'small'].includes(value)
   },
   disabled: {
     type: Boolean,
@@ -73,7 +77,7 @@ const buttonClass = computed(() => {
   ]
 })
 
-const handleClick = (event) => {
+const handleClick = (event: MouseEvent) => {
   if (!props.disabled && !props.loading) {
     emit('click', event)
   }

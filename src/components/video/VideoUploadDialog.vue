@@ -39,12 +39,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, nextTick } from 'vue'
+import { ref, reactive, computed, type Ref } from 'vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
-const emit = defineEmits(['success', 'cancel'])
+const emit = defineEmits<{
+  (e: 'success', payload: any): void
+  (e: 'cancel'): void
+}>()
 
 const userStore = useUserStore()
 const token = computed(() => userStore.token)
@@ -53,15 +56,24 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')
 const uploadUrl = `${baseUrl}/video/upload_video`
 
 const visible = ref(false)
-const formRef = ref(null)
-const uploadRef = ref(null)
+const formRef = ref<{ validate: () => Promise<boolean> } | null>(null)
+const uploadRef = ref<{ clearFiles: () => void } | null>(null)
 const uploading = ref(false)
 const uploadProgress = ref(0)
 const submitting = ref(false)
 
-const fileList = ref([])
+const fileList = ref<any[]>([])
 
-const form = reactive({
+const form = reactive<{
+  title: string
+  description: string
+  videoUrl: string
+  videoFile: File | null
+  video: boolean
+  coverUrl: string
+  coverFile: File | null
+  cover: boolean
+}>({
   title: '',
   description: '',
   videoUrl: '',
@@ -105,12 +117,12 @@ const resetForm = () => {
   uploadRef.value?.clearFiles()
 }
 
-const getFilenameWithoutExtension = (filename) =>
+const getFilenameWithoutExtension = (filename: string) =>
   filename.replace(/\.[^/.]+$/, '')
 
-const getFileType = (file) => file?.raw?.type || file?.type || ''
+const getFileType = (file: any) => file?.raw?.type || file?.type || ''
 
-const beforeVideoUpload = (file) => {
+const beforeVideoUpload = (file: File | any) => {
   const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime']
   const isVideo = allowedTypes.includes(getFileType(file))
   const isSizeOk = file.size / 1024 / 1024 < 100
@@ -126,7 +138,7 @@ const beforeVideoUpload = (file) => {
   return true
 }
 
-const beforeCoverUpload = (file) => {
+const beforeCoverUpload = (file: File | any) => {
   const isImage = file.type.startsWith('image/')
   const isSizeOk = file.size / 1024 / 1024 < 5
   if (!isImage) {
@@ -140,14 +152,14 @@ const beforeCoverUpload = (file) => {
   return true
 }
 
-const handleCoverChange = (file) => {
+const handleCoverChange = (file: any) => {
   const raw = file.raw || file
   form.coverFile = raw
   form.coverUrl = URL.createObjectURL(raw)
   form.cover = true
 }
 
-const handleChange = async (file, newFileList) => {
+const handleChange = async (file: any, newFileList: any[]) => {
   fileList.value = [newFileList[newFileList.length - 1]]
 
   if (form.videoFile) {
@@ -166,7 +178,7 @@ const handleChange = async (file, newFileList) => {
   replaceVideo(file)
 }
 
-const replaceVideo = (file) => {
+const replaceVideo = (file: any) => {
   if (!beforeVideoUpload(file)) {
     fileList.value = []
     return
@@ -182,7 +194,7 @@ const replaceVideo = (file) => {
   generateCoverFromVideo(form.videoUrl)
 }
 
-const generateCoverFromVideo = (videoUrl) => {
+const generateCoverFromVideo = (videoUrl: string) => {
   const video = document.createElement('video')
   video.src = videoUrl
   video.crossOrigin = 'anonymous'
@@ -206,7 +218,7 @@ const generateCoverFromVideo = (videoUrl) => {
 }
 
 const handleSubmit = async () => {
-  const valid = await formRef.value.validate().catch(() => false)
+  const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
 
   if (!form.videoFile || !form.coverFile) {

@@ -13,7 +13,7 @@ export function setupRouterGuards(router: Router): void {
 
 // 认证守卫：拦截需要登录的页面
 function setupAuthGuard(router: Router): void {
-  router.beforeEach((to, from, next) => {
+  router.beforeEach((to, _from, next) => {
     const token = getToken()
     if (to.meta.requiresAuth && !token) {
       return next('/login')
@@ -35,7 +35,7 @@ function setupAuthGuard(router: Router): void {
 
 // SEO Meta TDK 设置守卫
 function setupMetaGuard(router: Router): void {
-  router.beforeEach((to, from, next) => {
+  router.beforeEach((to, _from, next) => {
     const meta = to.meta || {}
     useMeta({
       title: meta.title as string | undefined,
@@ -48,7 +48,7 @@ function setupMetaGuard(router: Router): void {
 
 // token 过期处理
 function setupExpiredTokenGuard(router: Router): void {
-  router.afterEach((to, from) => {
+  router.afterEach((_to, _from) => {
     const token = getToken()
     if (token && isTokenExpired(token)) {
       removeToken()

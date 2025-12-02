@@ -85,7 +85,7 @@ const form = reactive({
 const countdown = ref(0)
 const isSending = ref(false)
 const formRef = ref()
-let timer = null
+let timer:any = null
 
 const rules = {
   email: [
@@ -105,7 +105,7 @@ const rules = {
   ],
   confirmPassword: [
     {
-      validator: (rule, value) => {
+      validator: (_rule:any, value:any) => {
         if (!value) {
           return Promise.reject('请再次输入密码')
         }

@@ -7,12 +7,14 @@
 </template>
 
 <script setup lang="ts">
-defineProps({
-  banners: {
-    type: Array,
-    required: true,
-  },
-})
+interface BannerItem {
+  id: number | string
+  image: string
+}
+
+defineProps<{
+  banners: BannerItem[]
+}>()
 </script>
 
 <style scoped>

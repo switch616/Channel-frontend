@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ElMessageBox } from 'element-plus'
 import { changePassword } from '@/api/user'
@@ -27,12 +27,16 @@ import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
 
 const visible = ref(false)
-const form = ref({
+const form: Ref<{
+  old_password: string
+  new_password: string
+  confirm_password: string
+}> = ref({
   old_password: '',
   new_password: '',
   confirm_password: ''
 })
-const formRef = ref()
+const formRef = ref<{ validate: (cb: (valid: boolean) => void) => void } | null>(null)
 const rules = {
   old_password: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
   new_password: [
@@ -46,7 +50,7 @@ const rules = {
 }
 
 const submit = () => {
-  formRef.value.validate(async valid => {
+  formRef.value?.validate(async valid => {
     if (!valid) return
     try {
       await changePassword({

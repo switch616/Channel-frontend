@@ -53,8 +53,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, type PropType } from 'vue'
 import BaseButton from './BaseButton.vue'
+
+type ModalType = '' | 'info' | 'success' | 'warning' | 'error'
 
 const props = defineProps({
   modelValue: {
@@ -66,7 +68,7 @@ const props = defineProps({
     default: ''
   },
   width: {
-    type: [String, Number],
+    type: [String, Number] as PropType<string | number>,
     default: '50%'
   },
   top: {
@@ -118,24 +120,24 @@ const props = defineProps({
     default: false
   },
   type: {
-    type: String,
+    type: String as PropType<ModalType>,
     default: '',
-    validator: (value) => ['', 'info', 'success', 'warning', 'error'].includes(value)
+    validator: (value: ModalType) => ['', 'info', 'success', 'warning', 'error'].includes(value)
   }
 })
 
-const emit = defineEmits([
-  'update:modelValue',
-  'open',
-  'opened',
-  'close',
-  'closed',
-  'confirm',
-  'cancel',
-  'before-close'
-])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'open'): void
+  (e: 'opened'): void
+  (e: 'close'): void
+  (e: 'closed'): void
+  (e: 'confirm'): void
+  (e: 'cancel'): void
+  (e: 'before-close', done: () => void): void
+}>()
 
-const visible = ref(props.modelValue)
+const visible = ref<boolean>(props.modelValue)
 
 // 监听外部值变化
 watch(() => props.modelValue, (newValue) => {
@@ -170,7 +172,7 @@ const handleClosed = () => {
   emit('closed')
 }
 
-const handleBeforeClose = (done) => {
+const handleBeforeClose = (done: () => void) => {
   emit('before-close', done)
 }
 

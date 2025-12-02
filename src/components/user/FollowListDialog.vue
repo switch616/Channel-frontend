@@ -100,25 +100,39 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, type PropType } from 'vue'
 import { getFollowingList, getFansList, followUser, removeFollow, removeFan } from '@/api/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { eventBus, EVENTS } from '@/utils/eventBus'
 
+type DialogType = 'following' | 'fans'
+
+interface FollowUserItem {
+  id: number
+  username: string
+  unique_id: string
+  bio?: string
+  profile_picture?: string
+  is_followed?: boolean
+  is_mutual?: boolean
+}
+
 const props = defineProps({
   visible: Boolean,
-  type: { type: String, default: 'following' }, // following or fans
+  type: { type: String as PropType<DialogType>, default: 'following' }, // following or fans
   userId: { type: Number, required: true },
 })
-const emit = defineEmits(['close'])
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
 
 const userStore = useUserStore()
 const title = computed(() => props.type === 'following' ? '关注列表' : '粉丝列表')
 const showOrder = computed(() => props.type === 'following')
 
-const list = ref([])
+const list = ref<FollowUserItem[]>([])
 const total = ref(0)
 const page = ref(1)
 const pageSize = 20
@@ -178,8 +192,9 @@ const fetchList = async (reset = false) => {
 }
 
 // 滚动加载更多
-const handleScroll = (e) => {
-  const { scrollTop, scrollHeight, clientHeight } = e.target
+const handleScroll = (e: Event) => {
+  const target = e.target as HTMLElement
+  const { scrollTop, scrollHeight, clientHeight } = target
   // 滚动到底部时加载更多
   if (scrollHeight - scrollTop - clientHeight < 50 && !loading.value && hasMore.value) {
     fetchList()
@@ -187,7 +202,7 @@ const handleScroll = (e) => {
 }
 
 // 关注/取消关注（粉丝列表）
-const handleFollow = async (user) => {
+const handleFollow = async (user: FollowUserItem) => {
   try {
     const res = await followUser(user.id)
     if (res?.success && res.data) {
@@ -212,7 +227,7 @@ const handleFollow = async (user) => {
 }
 
 // 取消关注（关注列表）
-const handleUnfollow = async (user) => {
+const handleUnfollow = async (user: FollowUserItem) => {
   try {
     await ElMessageBox.confirm(`确定要取消关注 ${user.username} 吗？`, '取消关注', {
       confirmButtonText: '确定取消',
@@ -245,7 +260,7 @@ const handleUnfollow = async (user) => {
 }
 
 // 移除粉丝（粉丝列表）
-const handleRemoveFan = async (user) => {
+const handleRemoveFan = async (user: FollowUserItem) => {
   try {
     await ElMessageBox.confirm(`确定要移除粉丝 ${user.username} 吗？`, '移除粉丝', {
       confirmButtonText: '确定移除',
@@ -284,7 +299,7 @@ const handleClose = () => {
 }
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')
-function resolveUrl(path) {
+function resolveUrl(path?: string | null) {
   if (!path) return ''
   if (/^https?:\/\//.test(path)) return path
   return `${baseUrl}/${path.replace(/^\/+/,'')}`

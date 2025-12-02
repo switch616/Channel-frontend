@@ -15,12 +15,17 @@
 </template>
 
 <script setup lang="ts">
-defineProps({
-  messages: {
-    type: Array,
-    default: () => [],
-  },
-})
+import type { PropType } from 'vue'
+
+interface MessageItem {
+  time: string
+  content: string
+  [key: string]: unknown
+}
+
+defineProps<{
+  messages: MessageItem[]
+}>()
 </script>
 
 <style scoped>

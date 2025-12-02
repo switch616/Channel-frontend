@@ -1,7 +1,10 @@
 import request from '@/api/axios'
 import type { ApiResponse, PaginationParams, PaginatedResponse, Video, Comment, UploadProgressCallback } from '@/types/api'
 
-export const uploadVideoAPI = async (data: FormData, onUploadProgress?: UploadProgressCallback): Promise<ApiResponse<Video>> => {
+export const uploadVideoAPI = async (
+  data: FormData, 
+  onUploadProgress?: UploadProgressCallback
+): Promise<ApiResponse<Video>> => {
   return await request({
     url: '/video/upload_video',
     method: 'post',
@@ -9,7 +12,13 @@ export const uploadVideoAPI = async (data: FormData, onUploadProgress?: UploadPr
     headers: {
       'Content-Type': 'multipart/form-data',
     },
-    onUploadProgress,
+    // 适配 Axios 的进度事件到自定义的 UploadProgressCallback 结构
+    onUploadProgress: progressEvent => {
+      if (!onUploadProgress) return
+      const { loaded = 0, total = 0 } = progressEvent
+      const percent = total > 0 ? Math.round((loaded / total) * 100) : 0
+      onUploadProgress({ loaded, total, percent })
+    },
   })
 }
 

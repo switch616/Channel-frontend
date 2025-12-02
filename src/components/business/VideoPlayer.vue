@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick, type PropType } from 'vue'
 import { VideoPlay, VideoPause, Mute, Microphone, FullScreen, Aim, Warning } from '@element-plus/icons-vue'
 import BaseLoading from '@/components/base/BaseLoading.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
@@ -113,11 +113,11 @@ const props = defineProps({
     default: true
   },
   width: {
-    type: [String, Number],
+    type: [String, Number] as PropType<string | number>,
     default: '100%'
   },
   height: {
-    type: [String, Number],
+    type: [String, Number] as PropType<string | number>,
     default: 'auto'
   },
   aspectRatio: {
@@ -126,20 +126,20 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits([
-  'play',
-  'pause',
-  'ended',
-  'timeupdate',
-  'volumechange',
-  'error',
-  'loadstart',
-  'loadeddata',
-  'canplay'
-])
+const emit = defineEmits<{
+  (e: 'play'): void
+  (e: 'pause'): void
+  (e: 'ended'): void
+  (e: 'timeupdate', currentTime: number): void
+  (e: 'volumechange', volume: number): void
+  (e: 'error', event: Event): void
+  (e: 'loadstart'): void
+  (e: 'loadeddata'): void
+  (e: 'canplay'): void
+}>()
 
-const playerContainer = ref(null)
-const videoElement = ref(null)
+const playerContainer = ref<HTMLDivElement | null>(null)
+const videoElement = ref<HTMLVideoElement | null>(null)
 const loading = ref(false)
 const error = ref('')
 const isPlaying = ref(false)
@@ -286,7 +286,7 @@ const handleVolumeChange = () => {
   emit('volumechange', volume.value)
 }
 
-const handleError = (event) => {
+const handleError = (event: Event) => {
   loading.value = false
   error.value = '视频加载失败'
   console.error('视频播放错误:', event)
@@ -323,7 +323,7 @@ const toggleFullscreen = () => {
   }
 }
 
-const handleProgressClick = (event) => {
+const handleProgressClick = (event: MouseEvent) => {
   if (!videoElement.value || !duration.value) return
   
   const rect = event.currentTarget.getBoundingClientRect()

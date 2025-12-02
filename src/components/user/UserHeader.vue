@@ -83,9 +83,9 @@ const user = computed(() => userStore.user)
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 
 // 组件引用
-const profileEditRef = ref(null)
-const videoUploadRef = ref(null)
-const changePwdDialog = ref()
+const profileEditRef = ref<InstanceType<typeof ProfileEditDialog> | null>(null)
+const videoUploadRef = ref<InstanceType<typeof VideoUploadDialog> | null>(null)
+const changePwdDialog = ref<{ visible: boolean } | null>(null)
 
 const showFollowDialog = ref(false)
 const followDialogType = ref('following')
@@ -125,16 +125,19 @@ const openVideoUpload = () => {
   videoUploadRef.value?.open()
 }
 
-const props = defineProps({
-  user: Object,
-  readonly: Boolean,
-  showFollow: Boolean,
-  isFollowed: Boolean,
-})
-const emit = defineEmits(['follow'])
+const props = defineProps<{
+  user?: unknown
+  readonly?: boolean
+  showFollow?: boolean
+  isFollowed?: boolean
+}>()
+const emit = defineEmits<{
+  (e: 'follow'): void
+  (e: 'video-upload-success'): void
+}>()
 
 // 视频上传成功处理
-const handleVideoUploadSuccess = (videoData) => {
+const handleVideoUploadSuccess = () => {
   // 更新用户视频数量
   if (userStore.user) {
     userStore.setUser({
@@ -152,7 +155,7 @@ const copyUniqueId = () => {
   ElMessage.success('ID已复制')
 }
 
-const openFollowDialog = (type) => {
+const openFollowDialog = (type: 'following' | 'fans') => {
   followDialogType.value = type
   showFollowDialog.value = true
 }
