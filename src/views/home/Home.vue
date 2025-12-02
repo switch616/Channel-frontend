@@ -14,7 +14,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
 import { sidebarMenu } from './sidebarMenu'
 

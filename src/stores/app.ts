@@ -4,8 +4,81 @@
  */
 import { defineStore } from 'pinia'
 
+interface AppConfig {
+  appName: string
+  version: string
+  apiBaseUrl: string
+  uploadMaxSize: number
+  supportedVideoFormats: string[]
+  supportedImageFormats: string[]
+}
+
+interface Theme {
+  mode: 'light' | 'dark' | 'auto'
+  primaryColor: string
+  customColors: Record<string, string>
+}
+
+interface Layout {
+  sidebarCollapsed: boolean
+  sidebarWidth: number
+  headerHeight: number
+  footerHeight: number
+}
+
+interface Loading {
+  global: boolean
+  page: boolean
+  component: boolean
+}
+
+interface Error {
+  global: string | null
+  page: string | null
+  component: string | null
+}
+
+interface Notification {
+  id: number
+  type?: 'success' | 'warning' | 'info' | 'error'
+  title?: string
+  message: string
+  duration?: number
+  showClose?: boolean
+  read?: boolean
+}
+
+interface Breadcrumb {
+  title: string
+  path?: string
+}
+
+interface Device {
+  type: 'desktop' | 'tablet' | 'mobile'
+  width: number
+  height: number
+}
+
+interface Network {
+  online: boolean
+  type: string
+}
+
+interface AppState {
+  config: AppConfig
+  theme: Theme
+  layout: Layout
+  loading: Loading
+  error: Error
+  notifications: Notification[]
+  breadcrumbs: Breadcrumb[]
+  pageTitle: string
+  device: Device
+  network: Network
+}
+
 export const useAppStore = defineStore('app', {
-  state: () => ({
+  state: (): AppState => ({
     // 应用配置
     config: {
       appName: 'YUN 社交媒体平台',
@@ -18,7 +91,7 @@ export const useAppStore = defineStore('app', {
     
     // 主题设置
     theme: {
-      mode: 'light', // light, dark, auto
+      mode: 'light',
       primaryColor: '#409eff',
       customColors: {}
     },
@@ -56,7 +129,7 @@ export const useAppStore = defineStore('app', {
     
     // 设备信息
     device: {
-      type: 'desktop', // desktop, tablet, mobile
+      type: 'desktop',
       width: window.innerWidth,
       height: window.innerHeight
     },
@@ -70,36 +143,36 @@ export const useAppStore = defineStore('app', {
 
   getters: {
     // 获取完整页面标题
-    fullPageTitle: (state) => {
+    fullPageTitle: (state): string => {
       return state.pageTitle ? `${state.pageTitle} - ${state.config.appName}` : state.config.appName
     },
     
     // 是否为移动设备
-    isMobile: (state) => state.device.type === 'mobile',
+    isMobile: (state): boolean => state.device.type === 'mobile',
     
     // 是否为平板设备
-    isTablet: (state) => state.device.type === 'tablet',
+    isTablet: (state): boolean => state.device.type === 'tablet',
     
     // 是否为桌面设备
-    isDesktop: (state) => state.device.type === 'desktop',
+    isDesktop: (state): boolean => state.device.type === 'desktop',
     
     // 是否有全局错误
-    hasGlobalError: (state) => !!state.error.global,
+    hasGlobalError: (state): boolean => !!state.error.global,
     
     // 是否有页面错误
-    hasPageError: (state) => !!state.error.page,
+    hasPageError: (state): boolean => !!state.error.page,
     
     // 是否有组件错误
-    hasComponentError: (state) => !!state.error.component,
+    hasComponentError: (state): boolean => !!state.error.component,
     
     // 是否有任何加载状态
-    isLoading: (state) => state.loading.global || state.loading.page || state.loading.component,
+    isLoading: (state): boolean => state.loading.global || state.loading.page || state.loading.component,
     
     // 未读通知数量
-    unreadNotificationCount: (state) => state.notifications.filter(n => !n.read).length,
+    unreadNotificationCount: (state): number => state.notifications.filter(n => !n.read).length,
     
     // 当前主题模式
-    currentThemeMode: (state) => {
+    currentThemeMode: (state): 'light' | 'dark' => {
       if (state.theme.mode === 'auto') {
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
       }
@@ -109,18 +182,18 @@ export const useAppStore = defineStore('app', {
 
   actions: {
     // 设置应用配置
-    setConfig(config) {
+    setConfig(config: Partial<AppConfig>): void {
       this.config = { ...this.config, ...config }
     },
 
     // 设置主题
-    setTheme(theme) {
+    setTheme(theme: Partial<Theme>): void {
       this.theme = { ...this.theme, ...theme }
       this.applyTheme()
     },
 
     // 应用主题
-    applyTheme() {
+    applyTheme(): void {
       const root = document.documentElement
       const mode = this.currentThemeMode
       
@@ -134,53 +207,53 @@ export const useAppStore = defineStore('app', {
     },
 
     // 切换主题模式
-    toggleTheme() {
-      const modes = ['light', 'dark', 'auto']
+    toggleTheme(): void {
+      const modes: ('light' | 'dark' | 'auto')[] = ['light', 'dark', 'auto']
       const currentIndex = modes.indexOf(this.theme.mode)
       const nextIndex = (currentIndex + 1) % modes.length
       this.setTheme({ mode: modes[nextIndex] })
     },
 
     // 设置布局
-    setLayout(layout) {
+    setLayout(layout: Partial<Layout>): void {
       this.layout = { ...this.layout, ...layout }
     },
 
     // 切换侧边栏
-    toggleSidebar() {
+    toggleSidebar(): void {
       this.layout.sidebarCollapsed = !this.layout.sidebarCollapsed
     },
 
     // 设置加载状态
-    setLoading(type, loading) {
+    setLoading(type: keyof Loading, loading: boolean): void {
       this.loading[type] = loading
     },
 
     // 设置错误状态
-    setError(type, error) {
+    setError(type: keyof Error, error: string | null): void {
       this.error[type] = error
     },
 
     // 清除错误状态
-    clearError(type) {
+    clearError(type: keyof Error): void {
       this.error[type] = null
     },
 
     // 添加通知
-    addNotification(notification) {
+    addNotification(notification: Partial<Notification>): number {
       const id = Date.now() + Math.random()
-      const newNotification = {
+      const newNotification: Notification = {
         id,
         type: 'info',
         duration: 4500,
         showClose: true,
         ...notification
-      }
+      } as Notification
       
       this.notifications.unshift(newNotification)
       
       // 自动移除通知
-      if (newNotification.duration > 0) {
+      if (newNotification.duration && newNotification.duration > 0) {
         setTimeout(() => {
           this.removeNotification(id)
         }, newNotification.duration)
@@ -190,7 +263,7 @@ export const useAppStore = defineStore('app', {
     },
 
     // 移除通知
-    removeNotification(id) {
+    removeNotification(id: number): void {
       const index = this.notifications.findIndex(n => n.id === id)
       if (index > -1) {
         this.notifications.splice(index, 1)
@@ -198,7 +271,7 @@ export const useAppStore = defineStore('app', {
     },
 
     // 标记通知为已读
-    markNotificationAsRead(id) {
+    markNotificationAsRead(id: number): void {
       const notification = this.notifications.find(n => n.id === id)
       if (notification) {
         notification.read = true
@@ -206,27 +279,27 @@ export const useAppStore = defineStore('app', {
     },
 
     // 清除所有通知
-    clearNotifications() {
+    clearNotifications(): void {
       this.notifications = []
     },
 
     // 设置面包屑
-    setBreadcrumbs(breadcrumbs) {
+    setBreadcrumbs(breadcrumbs: Breadcrumb[]): void {
       this.breadcrumbs = breadcrumbs
     },
 
     // 设置页面标题
-    setPageTitle(title) {
+    setPageTitle(title: string): void {
       this.pageTitle = title
       document.title = this.fullPageTitle
     },
 
     // 更新设备信息
-    updateDeviceInfo() {
+    updateDeviceInfo(): void {
       const width = window.innerWidth
       const height = window.innerHeight
       
-      let type = 'desktop'
+      let type: 'desktop' | 'tablet' | 'mobile' = 'desktop'
       if (width < 768) {
         type = 'mobile'
       } else if (width < 1024) {
@@ -237,23 +310,24 @@ export const useAppStore = defineStore('app', {
     },
 
     // 更新网络状态
-    updateNetworkStatus() {
+    updateNetworkStatus(): void {
       this.network.online = navigator.onLine
       
       // 尝试获取网络类型（如果支持）
       if ('connection' in navigator) {
-        this.network.type = navigator.connection.effectiveType || 'unknown'
+        const connection = (navigator as any).connection
+        this.network.type = connection?.effectiveType || 'unknown'
       }
     },
 
     // 初始化应用
-    init() {
+    init(): void {
       // 监听窗口大小变化
-      window.addEventListener('resize', this.updateDeviceInfo)
+      window.addEventListener('resize', this.updateDeviceInfo.bind(this))
       
       // 监听网络状态变化
-      window.addEventListener('online', this.updateNetworkStatus)
-      window.addEventListener('offline', this.updateNetworkStatus)
+      window.addEventListener('online', this.updateNetworkStatus.bind(this))
+      window.addEventListener('offline', this.updateNetworkStatus.bind(this))
       
       // 初始化设备信息
       this.updateDeviceInfo()
@@ -273,10 +347,11 @@ export const useAppStore = defineStore('app', {
     },
 
     // 销毁应用
-    destroy() {
-      window.removeEventListener('resize', this.updateDeviceInfo)
-      window.removeEventListener('online', this.updateNetworkStatus)
-      window.removeEventListener('offline', this.updateNetworkStatus)
+    destroy(): void {
+      window.removeEventListener('resize', this.updateDeviceInfo.bind(this))
+      window.removeEventListener('online', this.updateNetworkStatus.bind(this))
+      window.removeEventListener('offline', this.updateNetworkStatus.bind(this))
     }
   }
 })
+

@@ -1,17 +1,18 @@
-// src/router/guards.js
+// src/router/guards.ts
+import { Router } from 'vue-router'
 import { getToken, removeToken } from '@/utils/auth'
 import { useMeta } from '@/utils/useMeta'
 import { preloadUserProfile } from '@/utils/preload'
 
 // 安装所有全局守卫
-export function setupRouterGuards(router) {
+export function setupRouterGuards(router: Router): void {
   setupAuthGuard(router)
   setupMetaGuard(router)
   setupExpiredTokenGuard(router)
 }
 
 // 认证守卫：拦截需要登录的页面
-function setupAuthGuard(router) {
+function setupAuthGuard(router: Router): void {
   router.beforeEach((to, from, next) => {
     const token = getToken()
     if (to.meta.requiresAuth && !token) {
@@ -33,20 +34,20 @@ function setupAuthGuard(router) {
 }
 
 // SEO Meta TDK 设置守卫
-function setupMetaGuard(router) {
+function setupMetaGuard(router: Router): void {
   router.beforeEach((to, from, next) => {
     const meta = to.meta || {}
     useMeta({
-      title: meta.title,
-      description: meta.description,
-      keywords: meta.keywords,
+      title: meta.title as string | undefined,
+      description: meta.description as string | undefined,
+      keywords: meta.keywords as string | undefined,
     })
     next()
   })
 }
 
 // token 过期处理
-function setupExpiredTokenGuard(router) {
+function setupExpiredTokenGuard(router: Router): void {
   router.afterEach((to, from) => {
     const token = getToken()
     if (token && isTokenExpired(token)) {
@@ -57,7 +58,7 @@ function setupExpiredTokenGuard(router) {
 }
 
 // token 过期检测方法
-function isTokenExpired(token) {
+function isTokenExpired(token: string): boolean {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]))
     const expiryTime = payload.exp * 1000
@@ -66,3 +67,4 @@ function isTokenExpired(token) {
     return true // token 不合法直接认为过期
   }
 }
+

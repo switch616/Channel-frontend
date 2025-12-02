@@ -1,6 +1,7 @@
 import request from '@/api/axios'
+import type { ApiResponse, PaginationParams, PaginatedResponse, Video, Comment, UploadProgressCallback } from '@/types/api'
 
-export const uploadVideoAPI = async (data, onUploadProgress) => {
+export const uploadVideoAPI = async (data: FormData, onUploadProgress?: UploadProgressCallback): Promise<ApiResponse<Video>> => {
   return await request({
     url: '/video/upload_video',
     method: 'post',
@@ -12,26 +13,25 @@ export const uploadVideoAPI = async (data, onUploadProgress) => {
   })
 }
 
-
-export const getMyVideos = async (params = {}) => {
+export const getMyVideos = async (params: PaginationParams = {}): Promise<ApiResponse<PaginatedResponse<Video>>> => {
   return await request({
     url: '/video/my_list',
     method: 'get',
-    params, // { page: 1, size: 10 }
+    params,
   })
 }
 
 // 获取首页推荐视频列表
-export const getRecommendVideos = async (params = {}) => {
+export const getRecommendVideos = async (params: PaginationParams = {}): Promise<ApiResponse<PaginatedResponse<Video>>> => {
   return await request({
     url: '/video/recommend',
     method: 'get',
-    params, // { page: 1, size: 8 }
+    params,
   })
 }
 
 // 获取视频详情
-export const getVideoDetail = async (id) => {
+export const getVideoDetail = async (id: number): Promise<ApiResponse<Video>> => {
   return await request({
     url: `/video/detail/${id}`,
     method: 'get'
@@ -39,7 +39,7 @@ export const getVideoDetail = async (id) => {
 }
 
 // 视频点赞
-export const likeVideo = async (videoId) => {
+export const likeVideo = async (videoId: number): Promise<ApiResponse> => {
   return await request({
     url: '/interaction/like',
     method: 'post',
@@ -48,7 +48,7 @@ export const likeVideo = async (videoId) => {
 }
 
 // 视频收藏
-export const favoriteVideo = async (videoId) => {
+export const favoriteVideo = async (videoId: number): Promise<ApiResponse> => {
   return await request({
     url: '/interaction/collection',
     method: 'post',
@@ -57,25 +57,25 @@ export const favoriteVideo = async (videoId) => {
 }
 
 // 获取视频评论列表
-export const getVideoComments = async (videoId, params = {}) => {
+export const getVideoComments = async (videoId: number, params: PaginationParams & { parent_id?: number | null } = {}): Promise<ApiResponse<PaginatedResponse<Comment>>> => {
   return await request({
     url: `/comment/video/${videoId}`,
     method: 'get',
-    params // { page: 1, size: 20, parent_id: null }
+    params
   })
 }
 
 // 发表评论
-export const addComment = async (videoId, data) => {
+export const addComment = async (videoId: number, data: { content: string; parent_id?: number | null }): Promise<ApiResponse<Comment>> => {
   return await request({
     url: `/comment/`,
     method: 'post',
-    data // { video_id: 1, content: '评论内容', parent_id: null }
+    data: { video_id: videoId, ...data }
   })
 }
 
 // 评论点赞
-export const likeComment = async (commentId) => {
+export const likeComment = async (commentId: number): Promise<ApiResponse> => {
   return await request({
     url: `/comment/${commentId}/like`,
     method: 'post'
@@ -83,7 +83,7 @@ export const likeComment = async (commentId) => {
 }
 
 // 评论踩
-export const dislikeComment = async (commentId) => {
+export const dislikeComment = async (commentId: number): Promise<ApiResponse> => {
   return await request({
     url: `/comment/${commentId}/dislike`,
     method: 'post'
@@ -91,16 +91,16 @@ export const dislikeComment = async (commentId) => {
 }
 
 // 获取评论回复列表
-export const getCommentReplies = async (videoId, params = {}) => {
+export const getCommentReplies = async (videoId: number, params: PaginationParams & { parent_id?: number } = {}): Promise<ApiResponse<PaginatedResponse<Comment>>> => {
   return await request({
     url: `/comment/video/${videoId}`,
     method: 'get',
-    params // { page: 1, size: 10, parent_id: commentId }
+    params
   })
 }
 
 // 获取视频评论树（无限嵌套）
-export function getVideoCommentTree(videoId) {
+export function getVideoCommentTree(videoId: number): Promise<ApiResponse<Comment[]>> {
   return request({
     url: `/comment/video/${videoId}/tree`,
     method: 'get'
@@ -108,7 +108,7 @@ export function getVideoCommentTree(videoId) {
 }
 
 // 删除评论
-export const deleteComment = async (commentId) => {
+export const deleteComment = async (commentId: number): Promise<ApiResponse> => {
   return await request({
     url: `/comment/${commentId}`,
     method: 'delete'
@@ -116,7 +116,7 @@ export const deleteComment = async (commentId) => {
 }
 
 // 获取我点赞的视频
-export const getMyLikeVideos = (params) => {
+export const getMyLikeVideos = (params: PaginationParams = {}): Promise<ApiResponse<PaginatedResponse<Video>>> => {
   return request({
     url: '/interaction/my_likes',
     method: 'get',
@@ -125,7 +125,7 @@ export const getMyLikeVideos = (params) => {
 }
 
 // 获取我收藏的视频
-export const getMyFavoriteVideos = (params) => {
+export const getMyFavoriteVideos = (params: PaginationParams = {}): Promise<ApiResponse<PaginatedResponse<Video>>> => {
   return request({
     url: '/interaction/my_collections',
     method: 'get',
@@ -134,7 +134,7 @@ export const getMyFavoriteVideos = (params) => {
 }
 
 // 获取热门视频
-export const getHotVideos = (params = {}) => {
+export const getHotVideos = (params: PaginationParams = {}): Promise<ApiResponse<PaginatedResponse<Video>>> => {
   return request({
     url: '/video/hot',
     method: 'get',
@@ -143,7 +143,7 @@ export const getHotVideos = (params = {}) => {
 }
 
 // 获取最新视频
-export const getLatestVideos = (params = {}) => {
+export const getLatestVideos = (params: PaginationParams = {}): Promise<ApiResponse<PaginatedResponse<Video>>> => {
   return request({
     url: '/video/latest',
     method: 'get',
@@ -151,7 +151,7 @@ export const getLatestVideos = (params = {}) => {
   })
 }
 
-export const getWatchHistory = async (params = {}) => {
+export const getWatchHistory = async (params: PaginationParams = {}): Promise<ApiResponse<PaginatedResponse<Video>>> => {
   return await request({
     url: '/analytics/user/watch-history-mysql',
     method: 'get',
@@ -159,7 +159,7 @@ export const getWatchHistory = async (params = {}) => {
   })
 }
 
-export const logVideoView = async (data = {}) => {
+export const logVideoView = async (data: { video_id: number; watch_duration?: number } = {}): Promise<ApiResponse> => {
   return await request({
     url: '/analytics/log_video_view',
     method: 'post',
@@ -167,19 +167,21 @@ export const logVideoView = async (data = {}) => {
   })
 }
 
-export function deleteLike(videoId) {
+export function deleteLike(videoId: number): Promise<ApiResponse> {
   return request({
     url: `/interaction/like/${videoId}`,
     method: 'delete'
   })
 }
-export function deleteCollection(videoId) {
+
+export function deleteCollection(videoId: number): Promise<ApiResponse> {
   return request({
     url: `/interaction/collection/${videoId}`,
     method: 'delete'
   })
 }
-export function deleteHistory(videoId) {
+
+export function deleteHistory(videoId: number): Promise<ApiResponse> {
   return request({
     url: `/analytics/watch-history/${videoId}`,
     method: 'delete'
@@ -187,7 +189,7 @@ export function deleteHistory(videoId) {
 }
 
 // 获取他人作品
-export const getUserVideos = async (userId, params = {}) => {
+export const getUserVideos = async (userId: number, params: PaginationParams = {}): Promise<ApiResponse<PaginatedResponse<Video>>> => {
   return await request({
     url: `/user/${userId}/videos`,
     method: 'get',
@@ -196,7 +198,7 @@ export const getUserVideos = async (userId, params = {}) => {
 }
 
 // 获取他人资料
-export const getUserProfile = async (userId) => {
+export const getUserProfile = async (userId: number): Promise<ApiResponse<User>> => {
   return await request({
     url: `/user/profile/${userId}`,
     method: 'get'
@@ -204,7 +206,7 @@ export const getUserProfile = async (userId) => {
 }
 
 // 关注
-export const followUser = async (userId) => {
+export const followUser = async (userId: number): Promise<ApiResponse> => {
   return await request({
     url: '/user/follow',
     method: 'post',
@@ -213,7 +215,7 @@ export const followUser = async (userId) => {
 }
 
 // 取关
-export const unfollowUser = async (userId) => {
+export const unfollowUser = async (userId: number): Promise<ApiResponse> => {
   return await request({
     url: '/user/unfollow',
     method: 'post',
@@ -222,10 +224,11 @@ export const unfollowUser = async (userId) => {
 }
 
 // 获取关注状态
-export const getFollowStatus = async (userId) => {
+export const getFollowStatus = async (userId: number): Promise<ApiResponse<{ is_following: boolean }>> => {
   return await request({
     url: '/user/follow_status',
     method: 'get',
     params: { user_id: userId }
   })
 }
+

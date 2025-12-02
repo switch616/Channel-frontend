@@ -33,7 +33,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import BannerCarousel from '@/components/common/BannerCarousel.vue'
 import RecommendVideos from '@/components/video/RecommendVideos.vue'

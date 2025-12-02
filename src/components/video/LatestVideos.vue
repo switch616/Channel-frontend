@@ -7,7 +7,7 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import VideoGrid from './VideoGrid.vue'
 import { getLatestVideos } from '@/api/video'

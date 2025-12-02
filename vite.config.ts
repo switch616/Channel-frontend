@@ -11,6 +11,7 @@ export default defineConfig({
   },
   // 断点调试
   build: {
-      sourcemap: true
-    }
+    sourcemap: true
+  }
 })
+

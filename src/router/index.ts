@@ -1,9 +1,9 @@
-// src/router/index.js
-import { createRouter, createWebHistory } from 'vue-router'
+// src/router/index.ts
+import { createRouter, createWebHistory, Router } from 'vue-router'
 import { constantRoutes } from './routes'
 import { setupRouterGuards } from './guards'
 
-const router = createRouter({
+const router: Router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: constantRoutes,
   scrollBehavior: () => ({ top: 0 }),
@@ -13,3 +13,4 @@ const router = createRouter({
 setupRouterGuards(router)
 
 export default router
+

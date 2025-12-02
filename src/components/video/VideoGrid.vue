@@ -53,7 +53,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import VideoCard from './VideoCard.vue'
 import { deleteLike, deleteCollection, deleteHistory } from '@/api/video'

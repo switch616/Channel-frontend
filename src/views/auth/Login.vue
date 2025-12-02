@@ -49,7 +49,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { loginAPI, getImageAerificationCode } from '@/api/auth'
@@ -76,9 +76,26 @@ const formRef = ref()
 const router = useRouter()
 
 const loadCaptcha = async () => {
-  const res = await getImageAerificationCode()
-  form.captcha_id = res.captcha_id
-  captchaImage.value = res.image_base64
+  try {
+    const res = await getImageAerificationCode()
+    
+    // 验证码API直接返回 { captcha_id, image_base64 }，不是包装在统一响应格式中
+    // 但如果后端改为统一格式，也兼容处理
+    if (res?.success && res?.data) {
+      // 统一响应格式：{ code, msg, data: { captcha_id, image_base64 }, success }
+      form.captcha_id = res.data.captcha_id
+      captchaImage.value = res.data.image_base64 || res.data.image || ''
+    } else if (res?.captcha_id && res?.image_base64) {
+      // 直接返回格式：{ captcha_id, image_base64 }
+      form.captcha_id = res.captcha_id
+      captchaImage.value = res.image_base64
+    } else {
+      ElMessage.error(res?.msg || '获取验证码失败')
+    }
+  } catch (error: any) {
+    console.error('加载验证码失败:', error)
+    ElMessage.error(error?.response?.data?.msg || error?.message || '获取验证码失败')
+  }
 }
 
 // 读取本地存储的账号密码（记住密码），解密后加载
@@ -116,10 +133,10 @@ const submit = async () => {
       return
     }
 
-    // 存储 token 和过期时间
-    await userStore.setToken(token, expiresIn)
+    // 存储 token 和过期时间（传递 remember 参数）
+    userStore.setToken(token, expiresIn, form.remember)
 
-    // 处理“记住密码”
+    // 处理"记住密码"
     if (form.remember) {
       const encryptedData = encryptData({ email: form.email, password: form.password })
       localStorage.setItem('remembered_account', encryptedData)
@@ -127,13 +144,12 @@ const submit = async () => {
       localStorage.removeItem('remembered_account')
     }
 
+    // 获取用户资料
     await userStore.fetchUserProfile()
     ElMessage.success(res?.msg || '登录成功')
 
-    // 登录成功后跳转到首页并强制刷新
-    router.push('/').then(() => {
-      window.location.reload()
-    })
+    // 登录成功后跳转到首页（不需要刷新，因为状态已经在 store 中）
+    router.push('/')
   } catch (err) {
     console.log(err)
     // HTTP 层面的错误交给 axios 拦截器，但这里兜底提示

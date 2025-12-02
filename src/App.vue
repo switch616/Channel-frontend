@@ -3,7 +3,7 @@
   <router-view />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
 import NavBar from '@/components/layout/NavBar.vue'

@@ -12,7 +12,7 @@
   </vue-plyr>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import VuePlyr from 'vue-plyr'
 import 'vue-plyr/dist/vue-plyr.css'

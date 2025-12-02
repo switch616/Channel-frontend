@@ -84,7 +84,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { getHotVideos, getVideoCommentTree, addComment, likeComment as likeCommentAPI, dislikeComment as dislikeCommentAPI, deleteComment as deleteCommentAPI, favoriteVideo, likeVideo as likeVideoAPI } from '@/api/video'

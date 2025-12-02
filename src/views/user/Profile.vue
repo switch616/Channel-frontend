@@ -25,7 +25,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getMyVideos, getMyLikeVideos, getMyFavoriteVideos, getWatchHistory } from '@/api/video'

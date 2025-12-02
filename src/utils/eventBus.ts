@@ -1,11 +1,11 @@
 // 简单的事件总线实现
+type EventCallback = (data?: any) => void
+
 class EventBus {
-  constructor() {
-    this.events = {}
-  }
+  private events: Record<string, EventCallback[]> = {}
 
   // 监听事件
-  on(event, callback) {
+  on(event: string, callback: EventCallback): void {
     if (!this.events[event]) {
       this.events[event] = []
     }
@@ -13,7 +13,7 @@ class EventBus {
   }
 
   // 移除监听
-  off(event, callback) {
+  off(event: string, callback?: EventCallback): void {
     if (!this.events[event]) return
     if (!callback) {
       delete this.events[event]
@@ -26,7 +26,7 @@ class EventBus {
   }
 
   // 触发事件
-  emit(event, data) {
+  emit(event: string, data?: any): void {
     if (!this.events[event]) return
     this.events[event].forEach(callback => {
       try {
@@ -38,7 +38,7 @@ class EventBus {
   }
 
   // 清除所有事件
-  clear() {
+  clear(): void {
     this.events = {}
   }
 }
@@ -53,4 +53,5 @@ export const EVENTS = {
   VIDEO_UPLOADED: 'video_uploaded',
   VIDEO_LIKED: 'video_liked',
   VIDEO_COLLECTED: 'video_collected'
-} 
+} as const
+

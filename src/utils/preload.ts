@@ -1,15 +1,15 @@
 import { useUserStore } from '@/stores/user'
 import { getToken } from '@/utils/auth'
 
+type UserBehavior = 'hover_profile_link' | 'navigate_to_profile'
+
 // 预加载管理器
 class PreloadManager {
-  constructor() {
-    this.preloadQueue = new Map()
-    this.isPreloading = false
-  }
+  private preloadQueue: Map<string, Promise<any>> = new Map()
+  private isPreloading: boolean = false
 
   // 预加载用户资料
-  async preloadUserProfile() {
+  async preloadUserProfile(): Promise<void> {
     if (this.isPreloading) return
     
     const userStore = useUserStore()
@@ -35,14 +35,14 @@ class PreloadManager {
   }
 
   // 预加载视频列表
-  async preloadUserVideos() {
+  async preloadUserVideos(): Promise<void> {
     // 这里可以预加载用户的视频列表
     // 暂时不实现，因为视频列表数据量较大
     console.log('视频列表预加载功能待实现')
   }
 
   // 智能预加载：根据用户行为预测需要的数据
-  async smartPreload(userBehavior) {
+  async smartPreload(userBehavior: UserBehavior): Promise<void> {
     switch (userBehavior) {
       case 'hover_profile_link':
         await this.preloadUserProfile()
@@ -61,5 +61,6 @@ class PreloadManager {
 export const preloadManager = new PreloadManager()
 
 // 导出便捷方法
-export const preloadUserProfile = () => preloadManager.preloadUserProfile()
-export const smartPreload = (behavior) => preloadManager.smartPreload(behavior) 
+export const preloadUserProfile = (): Promise<void> => preloadManager.preloadUserProfile()
+export const smartPreload = (behavior: UserBehavior): Promise<void> => preloadManager.smartPreload(behavior)
+

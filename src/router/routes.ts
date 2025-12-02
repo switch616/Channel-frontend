@@ -1,4 +1,6 @@
-export const constantRoutes = [
+import type { RouteRecordRaw } from 'vue-router'
+
+export const constantRoutes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'Login',
@@ -70,3 +72,4 @@ export const constantRoutes = [
     component: () => import('@/views/not-found/NotFound.vue'),
   },
 ]
+

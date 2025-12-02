@@ -22,7 +22,7 @@
   </el-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Star } from '@element-plus/icons-vue'
 import { getToken } from '@/utils/auth'

@@ -81,7 +81,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { VideoPlay, VideoPause, Mute, Microphone, FullScreen, Aim, Warning } from '@element-plus/icons-vue'
 import BaseLoading from '@/components/base/BaseLoading.vue'

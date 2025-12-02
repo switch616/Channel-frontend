@@ -22,7 +22,7 @@
   </el-header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'

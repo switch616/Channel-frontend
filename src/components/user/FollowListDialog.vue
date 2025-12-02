@@ -99,7 +99,7 @@
   </el-dialog>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { getFollowingList, getFansList, followUser, removeFollow, removeFan } from '@/api/user'
 import { ElMessage, ElMessageBox } from 'element-plus'

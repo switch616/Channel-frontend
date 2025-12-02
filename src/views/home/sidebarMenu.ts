@@ -1,6 +1,13 @@
 import { VideoCamera, Star } from '@element-plus/icons-vue'
+import type { Component } from 'vue'
 
-export const sidebarMenu = [
+interface MenuItem {
+  name: string
+  title: string
+  icon: Component
+}
+
+export const sidebarMenu: MenuItem[] = [
   {
     name: 'Jingxuan',
     title: '精选',
@@ -11,4 +18,5 @@ export const sidebarMenu = [
     title: '刷视频',
     icon: VideoCamera,
   },
-] 
+]
+

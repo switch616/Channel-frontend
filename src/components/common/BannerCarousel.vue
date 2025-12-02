@@ -6,7 +6,7 @@
   </el-carousel>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineProps({
   banners: {
     type: Array,
