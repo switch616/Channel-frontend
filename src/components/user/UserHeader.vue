@@ -88,7 +88,7 @@ const videoUploadRef = ref<InstanceType<typeof VideoUploadDialog> | null>(null)
 const changePwdDialog = ref<{ visible: boolean } | null>(null)
 
 const showFollowDialog = ref(false)
-const followDialogType = ref('following')
+const followDialogType = ref<'following' | 'fans'>('following')
 const refreshing = ref(false)
 
 // 性别图标计算
@@ -177,7 +177,7 @@ const refreshUserProfile = async () => {
 }
 
 const openChangePwdDialog = () => {
-  changePwdDialog.value.visible = true
+  changePwdDialog.value!.visible = true
 }
 
 </script>

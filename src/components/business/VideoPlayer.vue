@@ -252,7 +252,7 @@ const handleLoadStart = () => {
 
 const handleLoadedData = () => {
   loading.value = false
-  duration.value = videoElement.value.duration
+  duration.value = videoElement.value!.duration
   emit('loadeddata')
 }
 
@@ -276,13 +276,13 @@ const handleEnded = () => {
 }
 
 const handleTimeUpdate = () => {
-  currentTime.value = videoElement.value.currentTime
+  currentTime.value = videoElement.value!.currentTime
   emit('timeupdate', currentTime.value)
 }
 
 const handleVolumeChange = () => {
-  volume.value = Math.round(videoElement.value.volume * 100)
-  isMuted.value = videoElement.value.muted
+  volume.value = Math.round(videoElement.value!.volume * 100)
+  isMuted.value = videoElement.value!.muted
   emit('volumechange', volume.value)
 }
 
@@ -325,14 +325,18 @@ const toggleFullscreen = () => {
 
 const handleProgressClick = (event: MouseEvent) => {
   if (!videoElement.value || !duration.value) return
-  
-  const rect = event.currentTarget.getBoundingClientRect()
+
+  const target = event.currentTarget
+  if (!(target instanceof HTMLElement)) return   // 类型守卫
+
+  const rect = target.getBoundingClientRect()
   const clickX = event.clientX - rect.left
   const percent = clickX / rect.width
   const newTime = percent * duration.value
-  
+
   videoElement.value.currentTime = newTime
 }
+
 
 const retry = () => {
   error.value = ''
@@ -342,7 +346,7 @@ const retry = () => {
   }
 }
 
-const formatTime = (seconds) => {
+const formatTime = (seconds:any) => {
   if (!seconds || isNaN(seconds)) return '00:00'
   
   const minutes = Math.floor(seconds / 60)

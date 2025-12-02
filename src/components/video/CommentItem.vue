@@ -1,6 +1,6 @@
 <template>
-  <div class="comment-item" :style="{ marginLeft: getCommentIndent(level) + 'px' }" :class="{ 
-    'deep-nested': level > 2,
+  <div class="comment-item" :style="{ marginLeft: getCommentIndent(level!) + 'px' }" :class="{ 
+    'deep-nested': level! > 2,
     'max-level': isMaxLevel 
   }">
     <div class="comment-main">
@@ -17,7 +17,7 @@
           <el-button text size="small" @click="handleLike">点赞 {{ comment.likes || 0 }}</el-button>
           <el-button text size="small" @click="handleDislike">踩 {{ comment.dislikes || 0 }}</el-button>
           <el-button text size="small" @click="showReplyInput">回复</el-button>
-          <el-button v-if="comment.replyCount > 0 || replies.length > 0" text size="small" @click="toggleReplies">
+          <el-button v-if="comment.replyCount! > 0 || replies.length > 0" text size="small" @click="toggleReplies">
             {{ showReplies ? '收起回复' : `查看回复(${comment.replyCount || replies.length || 0})` }}
           </el-button>
           <el-button v-if="canDelete" text size="small" type="danger" @click="onDelete">删除</el-button>
@@ -65,7 +65,7 @@
             v-for="child in replies"
             :key="child.id"
             :comment="child"
-            :level="level + 1"
+            :level="level! + 1"
             :children="[]"
             :userId="userId"
             :videoOwnerId="videoOwnerId"
@@ -81,7 +81,7 @@
           v-for="child in replies"
           :key="child.id"
           :comment="child"
-          :level="level + 1"
+          :level="level! + 1"
           :children="[]"
           :userId="userId"
           :videoOwnerId="videoOwnerId"
@@ -104,10 +104,9 @@ import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import CommentItem from './CommentItem.vue'
 import { getCommentReplies, likeComment, dislikeComment, addComment } from '@/api/video'
-import { eventBus } from '@/utils/eventBus'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')
-function resolveUrl(path) {
+function resolveUrl(path:any) {
   if (!path) return ''
   if (/^https?:\/\//.test(path)) return path
   // 处理Windows路径中的反斜杠
@@ -213,7 +212,6 @@ const submitReply = async () => {
   try {
     // 直接在当前组件中处理回复
     const res = await addComment(props.comment.video_id, {
-      video_id: parseInt(props.comment.video_id),
       content: replyText.value,
       parent_id: props.comment.id
     })
@@ -279,7 +277,6 @@ const handleReply = async (replyData: { parent: CommentModel; content: string })
   // 处理多级回复
   try {
     const res = await addComment(props.comment.video_id, {
-      video_id: parseInt(props.comment.video_id),
       content: replyData.content,
       parent_id: replyData.parent.id
     })
@@ -318,7 +315,6 @@ const handleChildReply = async (replyData: { parent: CommentModel; content: stri
   // 处理子评论的回复
   try {
     const res = await addComment(props.comment.video_id, {
-      video_id: parseInt(props.comment.video_id),
       content: replyData.content,
       parent_id: replyData.parent.id
     })
@@ -371,12 +367,12 @@ const getCommentIndent = (level: number) => {
 
 // 检查是否达到最大级别（用于样式判断）
 const isMaxLevel = computed(() => {
-  return props.level >= 2 // 2层为最大级别
+  return props.level! >= 2 // 2层为最大级别
 })
 
 // 检查是否应该折叠深层评论（超过2层）
 const shouldCollapseDeepComments = computed(() => {
-  return props.level >= 2 // 超过2层就折叠
+  return props.level! >= 2 // 超过2层就折叠
 })
 
 

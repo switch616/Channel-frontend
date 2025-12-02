@@ -7,27 +7,27 @@
       <el-col :xs="24" :sm="18">
         <div class="user-info">
           <div class="name-container">
-            <h2 class="username">{{ user.username }}</h2>
+            <h2 class="username">{{ user!.username }}</h2>
             <!-- 性别显示 -->
-            <span v-if="user.gender" class="gender-icon" :class="user.gender">
-              {{ user.gender === 'male' ? '♂' : user.gender === 'female' ? '♀' : '⚪' }}
+            <span v-if="user!.gender" class="gender-icon" :class="user!.gender">
+              {{ user!.gender === 'male' ? '♂' : user!.gender === 'female' ? '♀' : '⚪' }}
             </span>
           </div>
           <div class="unique-id-container">
             <span class="unique-id-label">ID:</span>
-            <span class="unique-id-value copyable" @click="copyUniqueId">{{ user.unique_id }}</span>
+            <span class="unique-id-value copyable" @click="copyUniqueId">{{ user!.unique_id }}</span>
             <el-tooltip content="这是用户唯一标识ID" placement="top">
               <el-icon class="info-icon">
                 <InfoFilled />
               </el-icon>
             </el-tooltip>
           </div>
-          <p class="bio" v-if="user.bio">{{ user.bio }}</p>
+          <p class="bio" v-if="user!.bio">{{ user!.bio }}</p>
           <div class="stats">
-            <span>作品 {{ user.video_count || 0 }}</span>
-            <span>关注 {{ user.following_count || 0 }}</span>
+            <span>作品 {{ user!.video_count || 0 }}</span>
+            <span>关注 {{ user!.following_count || 0 }}</span>
             <span class="fans-stat">
-              粉丝 {{ user.follower_count || 0 }}
+              粉丝 {{ user!.follower_count || 0 }}
               <el-button 
                 type="text" 
                 size="small" 
@@ -111,7 +111,7 @@ const avatarUrl = computed(() => {
 
 // 复制功能
 const copyUniqueId = () => {
-  navigator.clipboard.writeText(props.user.unique_id)
+  navigator.clipboard.writeText(props.user!.unique_id)
   ElMessage.success('ID已复制')
 }
 

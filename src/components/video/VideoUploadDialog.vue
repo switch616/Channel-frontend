@@ -206,7 +206,7 @@ const generateCoverFromVideo = (videoUrl: string) => {
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     const ctx = canvas.getContext('2d')
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    ctx!.drawImage(video, 0, 0, canvas.width, canvas.height)
     canvas.toBlob((blob) => {
       if (blob) {
         form.coverFile = new File([blob], 'cover.png', { type: 'image/png' })
@@ -243,7 +243,7 @@ const handleSubmit = async () => {
         'Content-Type': 'multipart/form-data',
       },
       onUploadProgress: (e) => {
-        uploadProgress.value = Math.round((e.loaded / e.total) * 100)
+        uploadProgress.value = Math.round((e.loaded / e.total!) * 100)
       },
     })
 
@@ -266,11 +266,11 @@ const handleSubmit = async () => {
     ElMessage.success('视频上传成功')
     visible.value = false
     emit('success', body.data)
-  } catch (error) {
+  } catch (error: any) {
     const msg =
-      error?.response?.data?.msg ||
-      error?.response?.data?.detail ||
-      error?.message ||
+      error.response?.data?.msg ||
+      error.response?.data?.detail ||
+      error.message ||
       '上传失败'
     ElMessage.error(msg)
   } finally {
@@ -291,6 +291,7 @@ defineExpose({ open, resetForm })
 .video-uploader {
   width: 100%;
 }
+
 .video-preview {
   width: 100%;
   max-height: 300px;
@@ -298,6 +299,7 @@ defineExpose({ open, resetForm })
   border-radius: 4px;
   background-color: #f5f7fa;
 }
+
 .cover-preview {
   width: 100%;
   max-height: 200px;

@@ -1,14 +1,8 @@
 <template>
   <el-dialog v-model="visible" title="编辑个人资料" width="550px">
     <div class="avatar-edit-container">
-      <el-upload
-        class="avatar-uploader-centered"
-        :action="uploadUrl"
-        :show-file-list="false"
-        :on-success="handleAvatarSuccess"
-        :before-upload="beforeAvatarUpload"
-        :headers="uploadHeaders"
-      >
+      <el-upload class="avatar-uploader-centered" :action="uploadUrl" :show-file-list="false"
+        :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload" :headers="uploadHeaders">
         <img v-if="form.profile_picture" :src="form.profile_picture" class="avatar-large" />
         <i v-else class="el-icon-plus avatar-uploader-icon-large"></i>
       </el-upload>
@@ -16,11 +10,10 @@
     </div>
 
     <el-form :model="form" label-width="80px" ref="formRef">
-      <el-form-item label="用户名" prop="username" 
-        :rules="[{ required: true, message: '用户名不能为空' }]">
+      <el-form-item label="用户名" prop="username" :rules="[{ required: true, message: '用户名不能为空' }]">
         <el-input v-model="form.username" />
       </el-form-item>
-      
+
       <!-- 新增性别选择 -->
       <el-form-item label="性别">
         <el-select v-model="form.gender" placeholder="请选择性别" style="width: 100%">
@@ -30,7 +23,7 @@
           <el-option label="未知" value="unknown" />
         </el-select>
       </el-form-item>
-      
+
       <el-form-item label="签名">
         <el-input type="textarea" v-model="form.bio" />
       </el-form-item>
@@ -46,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, type Ref } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { updateUserProfileAPI } from '@/api/auth'
@@ -93,9 +86,9 @@ const uploadHeaders = computed(() => ({
 
 // 打开弹窗并初始化
 const open = () => {
-  form.username = user.value.username || ''
-  form.gender = user.value.gender || 'male' // 从用户信息获取性别，默认为男
-  form.bio = user.value.bio || ''
+  form.username = user.value!.username || ''
+  form.gender = user.value!.gender || 'male' // 从用户信息获取性别，默认为男
+  form.bio = user.value!.bio || ''
   form.profile_picture = getFullAvatarUrl(user.value?.profile_picture)
   visible.value = true
 }
@@ -113,13 +106,14 @@ const handleAvatarSuccess = (response: any) => {
 
   const fullUrl = /^https?:\/\//.test(url) ? url : `${baseUrl}/${url.replace(/^\/+/, '')}`
   form.profile_picture = fullUrl
-  
+
   // 立即更新用户store中的头像
-  userStore.setUser({ 
-    ...userStore.user, 
-    profile_picture: url // 使用原始URL，因为avatarUrl计算属性会处理完整URL
+  userStore.setUser({
+    ...userStore.user!,
+    profile_picture: url,
   })
-  
+
+
   ElMessage.success('头像上传成功')
 }
 
@@ -158,14 +152,14 @@ const handleSave = async () => {
       ElMessage.success('资料已更新')
       visible.value = false
       userStore.setUser({
-        ...userStore.user,
+        ...userStore.user!,
         username: form.username,
         gender: form.gender, // 更新store中的性别
         bio: form.bio,
       })
       emit('success')
     } else {
-      ElMessage.error(res?.message || '更新失败')
+      ElMessage.error(res?.msg || '更新失败')
     }
   } catch (err) {
     ElMessage.error('网络错误或服务异常')

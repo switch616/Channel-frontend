@@ -23,8 +23,6 @@ import { ref, type Ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ElMessageBox } from 'element-plus'
 import { changePassword } from '@/api/user'
-import { useUserStore } from '@/stores/user'
-import { useRouter } from 'vue-router'
 
 const visible = ref(false)
 const form: Ref<{
@@ -45,7 +43,7 @@ const rules = {
   ],
   confirm_password: [
     { required: true, message: '请确认新密码', trigger: 'blur' },
-    { validator: (rule, value) => value === form.value.new_password, message: '两次输入不一致', trigger: 'blur' }
+    { validator: (_rule: any, value: any) => value === form.value.new_password, message: '两次输入不一致', trigger: 'blur' }
   ]
 }
 
@@ -66,14 +64,15 @@ const submit = () => {
       localStorage.clear()
       sessionStorage.clear()
       // 通知其他标签页强制登出
-      localStorage.setItem('force_logout', Date.now())
+      localStorage.setItem('force_logout', String(Date.now()))
       // 强制刷新页面再跳转到登录页
       window.location.href = '/login'
     } catch (e) {
-      ElMessage.error(e?.response?.data?.detail || '密码修改失败')
+      const err = e as any
+      ElMessage.error(err?.response?.data?.detail || '密码修改失败')
     }
   })
 }
 
 defineExpose({ visible })
-</script> 
+</script>

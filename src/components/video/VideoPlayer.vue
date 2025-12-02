@@ -1,5 +1,5 @@
 <template>
-  <vue-plyr :options="plyrOptions">
+  <!-- <vue-plyr :options="plyrOptions"> -->
     <video
       :poster="poster"
       playsinline
@@ -9,12 +9,13 @@
     >
       <source v-for="(src, key) in sources" :key="key" :src="src.url" :size="key.replace(/[^0-9]/g, '')" />
     </video>
-  </vue-plyr>
+  <!-- </vue-plyr> -->
 </template>
 
 <script setup lang="ts">
-import VuePlyr from 'vue-plyr'
-import 'vue-plyr/dist/vue-plyr.css'
+import { ref, defineProps } from 'vue'
+// import VuePlyr from 'vue-plyr'
+// import 'vue-plyr/dist/vue-plyr.css'
 import { logVideoView } from '@/api/video'
 
 const hasReported = ref(false)

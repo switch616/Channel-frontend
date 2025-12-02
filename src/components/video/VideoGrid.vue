@@ -2,50 +2,31 @@
   <div class="video-grid-wrapper">
     <!-- 刷新按钮 -->
     <div v-if="showRefresh" class="refresh-wrapper">
-      <el-button 
-        :loading="loading" 
-        type="primary" 
-        plain 
-        size="small" 
-        @click="handleRefresh"
-        class="refresh-btn"
-      >
-        <el-icon><Refresh /></el-icon>
+      <el-button :loading="loading" type="primary" plain size="small" @click="handleRefresh" class="refresh-btn">
+        <el-icon>
+          <Refresh />
+        </el-icon>
         {{ loading ? '刷新中...' : '刷新' }}
       </el-button>
     </div>
-    
+
     <el-row :gutter="20">
-      <el-col
-        v-for="video in videos"
-        :key="video.id"
-        :xs="24"
-        :sm="12"
-        :md="8"
-        :lg="6"
-      >
+      <el-col v-for="video in videos" :key="video.id" :xs="24" :sm="12" :md="8" :lg="6">
         <VideoCard :video="video" @delete="handleDelete(video.id)" />
       </el-col>
     </el-row>
-    
+
     <!-- 加载更多 -->
     <div v-if="showLoadMore" class="load-more-wrapper">
-      <el-button 
-        v-if="!finished" 
-        :loading="loading" 
-        type="primary" 
-        plain 
-        size="large" 
-        @click="handleLoadMore"
-        class="load-more-btn"
-      >
+      <el-button v-if="!finished" :loading="loading" type="primary" plain size="large" @click="handleLoadMore"
+        class="load-more-btn">
         {{ loading ? '加载中...' : '加载更多' }}
       </el-button>
       <div v-else class="no-more">
         <el-divider>没有更多了</el-divider>
       </div>
     </div>
-    
+
     <!-- 空状态 -->
     <div v-if="videos.length === 0 && !loading" class="empty-state">
       <el-empty description="暂无视频" />
@@ -54,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, type PropType } from 'vue'
+import { type PropType } from 'vue'
 import VideoCard from './VideoCard.vue'
 import { deleteLike, deleteCollection, deleteHistory } from '@/api/video'
 import { Refresh } from '@element-plus/icons-vue'
@@ -111,21 +92,24 @@ const handleRefresh = () => {
 }
 
 const handleDelete = async (id: number | string) => {
+  const numericId = Number(id)  // 永远转成 number
+
   let res
   if (props.tabType === 'likes') {
-    res = await deleteLike(id)
+    res = await deleteLike(numericId)
   } else if (props.tabType === 'favorites') {
-    res = await deleteCollection(id)
+    res = await deleteCollection(numericId)
   } else if (props.tabType === 'history') {
-    res = await deleteHistory(id)
+    res = await deleteHistory(numericId)
   } else {
     return
   }
-  // 统一响应结构：成功时 success=true
-  if (res && res.success) {
+
+  if (res?.success) {
     emit('refresh')
   }
 }
+
 </script>
 
 <style scoped>

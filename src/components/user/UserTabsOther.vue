@@ -32,7 +32,7 @@ watch(
   }
 )
 
-const onTabClick = (tab) => {
+const onTabClick = (tab:any) => {
   emit('update:modelValue', tab.paneName)
 }
 </script>

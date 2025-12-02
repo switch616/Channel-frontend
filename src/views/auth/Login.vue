@@ -56,6 +56,7 @@ import { loginAPI, getImageAerificationCode } from '@/api/auth'
 import { Message, Lock, CircleCheck } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { encryptData, decryptData } from '@/utils/auth'  // 引入加密解密函数
+import { extractErrorMessage } from '@/utils/errorHandler'
 import { useUserStore } from '@/stores/user'
 const userStore = useUserStore()
 
@@ -77,8 +78,8 @@ const router = useRouter()
 
 const loadCaptcha = async () => {
   try {
-    const res:any = await getImageAerificationCode()
-    
+    const res: any = await getImageAerificationCode()
+
     // 验证码API直接返回 { captcha_id, image_base64 }，不是包装在统一响应格式中
     // 但如果后端改为统一格式，也兼容处理
     if (res?.success && res?.data) {
@@ -151,12 +152,11 @@ const submit = async () => {
     // 登录成功后跳转到首页（不需要刷新，因为状态已经在 store 中）
     router.push('/')
   } catch (err) {
-    console.log(err)
-    // HTTP 层面的错误交给 axios 拦截器，但这里兜底提示
-    ElMessage.error(err?.response?.data?.msg || err?.response?.data?.detail || err?.message || '登录失败')
+    ElMessage.error(extractErrorMessage(err))
     await loadCaptcha()
     form.captcha_text = ''
   }
+
 }
 
 

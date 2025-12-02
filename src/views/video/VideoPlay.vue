@@ -218,7 +218,7 @@ import { followUser } from '@/api/user'
 import { eventBus, EVENTS } from '@/utils/eventBus'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')
-function resolveUrl(path) {
+function resolveUrl(path:any) {
   if (!path) return ''
   if (/^https?:\/\//.test(path)) return path
   return `${baseUrl}/${path.replace(/^\/+/, '')}`
@@ -277,7 +277,7 @@ const isMutual = ref(false)
 const isFollower = ref(false)
 
 const refreshVideoDetail = async () => {
-  const res = await getVideoDetail(videoId)
+  const res = await getVideoDetail(parseInt(videoId))
 
   // 统一响应：{ code, msg, data, success }
   if (!res?.success) {
@@ -352,7 +352,7 @@ const currentVideoOwnerId = computed(() => {
 // 视频交互功能
 const handleLike = async () => {
   try {
-    const res = await likeVideo(videoId)
+    const res = await likeVideo(parseInt(videoId))
     if (!res?.success) {
       throw new Error(res?.msg || '点赞失败')
     }
@@ -369,7 +369,7 @@ const handleLike = async () => {
 
 const handleFavorite = async () => {
   try {
-    const res = await favoriteVideo(videoId)
+    const res = await favoriteVideo(parseInt(videoId))
     if (!res?.success) {
       throw new Error(res?.msg || '收藏失败')
     }
@@ -414,7 +414,7 @@ const follow = async () => {
         // 触发关注事件，通知其他用户更新数据
         eventBus.emit(EVENTS.USER_FOLLOW_UPDATED, {
           action: 'unfollow',
-          current_user_id: user.value.id,
+          current_user_id: user.value!.id,
           target_user_id: author.value.id,
           current_following_count: res.data.following_count,
           current_follower_count: res.data.follower_count,
@@ -443,7 +443,7 @@ const follow = async () => {
         // 触发关注事件，通知其他用户更新数据
         eventBus.emit(EVENTS.USER_FOLLOW_UPDATED, {
           action: 'follow',
-          current_user_id: user.value.id,
+          current_user_id: user.value!.id,
           target_user_id: author.value.id,
           current_following_count: res.data.following_count,
           current_follower_count: res.data.follower_count,
@@ -499,7 +499,7 @@ const loadComments = async (reset = false) => {
       comments.value = []
     }
     
-    const res = await getVideoComments(videoId, {
+    const res = await getVideoComments(parseInt(videoId), {
       page: commentPage.value,
       size: commentSize.value,
       order: commentOrder.value
@@ -566,8 +566,7 @@ const submitComment = async () => {
     return
   }
   try {
-    const res = await addComment(videoId, {
-      video_id: parseInt(videoId),
+    const res = await addComment(parseInt(videoId), {
       content: commentText.value,
       parent_id: null
     })
@@ -660,8 +659,7 @@ const findCommentById = (commentList: any[], commentId: number | string): any | 
 
 const handleReplyComment = async ({ parent, content }: { parent: any; content: string }) => {
   try {
-    const res = await addComment(videoId, {
-      video_id: parseInt(videoId),
+    const res = await addComment(parseInt(videoId), {
       content,
       parent_id: parent.id
     })

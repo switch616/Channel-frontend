@@ -44,7 +44,8 @@
         </el-form-item>
 
         <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input v-model="form.confirmPassword" placeholder="请再次输入密码" type="password" show-password :prefix-icon="Lock" />
+          <el-input v-model="form.confirmPassword" placeholder="请再次输入密码" type="password" show-password
+            :prefix-icon="Lock" />
         </el-form-item>
 
         <el-form-item>
@@ -65,7 +66,7 @@ import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Message, Lock, CircleCheck } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'  // 引入 Vue Router
-
+import { extractErrorMessage } from '@/utils/errorHandler'
 import { sendEmailCodeAPI, registerAPI } from '@/api/auth'
 
 const router = useRouter()  // 使用 Vue Router
@@ -85,7 +86,7 @@ const form = reactive({
 const countdown = ref(0)
 const isSending = ref(false)
 const formRef = ref()
-let timer:any = null
+let timer: any = null
 
 const rules = {
   email: [
@@ -105,7 +106,7 @@ const rules = {
   ],
   confirmPassword: [
     {
-      validator: (_rule:any, value:any) => {
+      validator: (_rule: any, value: any) => {
         if (!value) {
           return Promise.reject('请再次输入密码')
         }
@@ -137,21 +138,21 @@ const sendCode = async () => {
       return
     }
 
-    ElMessage.success(res?.msg || res?.message || '验证码已发送')
+    ElMessage.success(res?.msg || res?.msg || '验证码已发送')
     countdown.value = 60
     timer = setInterval(() => {
       countdown.value--
       if (countdown.value === 0) clearInterval(timer)
     }, 1000)
   } catch (err) {
-    ElMessage.error(err?.response?.data?.msg || err?.response?.data?.detail || err?.message || '验证码发送失败')
+    ElMessage.error(extractErrorMessage(err))
   } finally {
     isSending.value = false
   }
 }
 
 const register = async () => {
-  await formRef.value.validate(async (valid) => {
+  await formRef.value.validate(async (valid: any) => {
     if (!valid) return
 
     try {
@@ -179,8 +180,8 @@ const register = async () => {
       setTimeout(() => {
         router.push('/login')
       }, 2000)  // 2秒后跳转
-    } catch (e) {
-      ElMessage.error(e?.response?.data?.msg || e?.response?.data?.detail || e?.message || '注册失败')
+    } catch (err) {
+      ElMessage.error(extractErrorMessage(err))
     }
   })
 }
@@ -251,13 +252,13 @@ const register = async () => {
   min-height: 44px;
 
   .code-input {
-    flex: 1.5; 
+    flex: 1.5;
     min-width: 150px;
   }
 
   .el-button {
     flex-shrink: 0;
-    width: 110px; 
+    width: 110px;
     height: 44px;
     font-size: 14px;
     font-weight: 600;
@@ -267,11 +268,11 @@ const register = async () => {
 
 .code-input {
   flex: 1;
-  min-width: 120px;  
+  min-width: 120px;
   border-radius: 6px;
   height: 44px;
   font-size: 14px;
-  box-sizing: border-box;  
+  box-sizing: border-box;
 }
 
 .el-button {

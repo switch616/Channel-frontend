@@ -64,6 +64,7 @@ export interface Comment {
 export interface PaginationParams {
   page?: number
   size?: number
+  order?: string
 }
 
 // 分页响应
@@ -77,10 +78,12 @@ export interface PaginatedResponse<T> {
 
 // 登录请求
 export interface LoginRequest {
-  username: string
-  password: string
-  captcha?: string
-  captcha_id?: string
+  username?: string;
+  email?: string;
+  password: string;
+  captcha_id: string;
+  captcha_text: string;
+  remember?: boolean;
 }
 
 // 登录响应

@@ -3,25 +3,25 @@
     <UserHeader :user="userStore.user" />
     <UserTabs v-model="activeTab">
       <template #videos>
-        <VideoGrid :videos="videoList" :loading="loading" :finished="finished" :showRefresh="true" @load-more="loadVideos" @refresh="refreshVideos" />
+        <VideoGrid :videos="videoList" :loading="loading" :finished="finished" :showRefresh="true"
+          @load-more="loadVideos" @refresh="refreshVideos" />
       </template>
       <template #likes>
-        <VideoGrid :videos="videoList" :loading="loading" :finished="finished" :showRefresh="true" @load-more="loadVideos" tabType="likes" @refresh="refreshVideos" />
+        <VideoGrid :videos="videoList" :loading="loading" :finished="finished" :showRefresh="true"
+          @load-more="loadVideos" tabType="likes" @refresh="refreshVideos" />
       </template>
       <template #favorites>
-        <VideoGrid :videos="videoList" :loading="loading" :finished="finished" :showRefresh="true" @load-more="loadVideos" tabType="favorites" @refresh="refreshVideos" />
+        <VideoGrid :videos="videoList" :loading="loading" :finished="finished" :showRefresh="true"
+          @load-more="loadVideos" tabType="favorites" @refresh="refreshVideos" />
       </template>
       <template #history>
-        <VideoGrid :videos="videoList" :loading="loading" :finished="finished" :showRefresh="true" @load-more="loadVideos" tabType="history" @refresh="refreshVideos" />
+        <VideoGrid :videos="videoList" :loading="loading" :finished="finished" :showRefresh="true"
+          @load-more="loadVideos" tabType="history" @refresh="refreshVideos" />
       </template>
     </UserTabs>
-    
+
     <!-- 回到顶部按钮 -->
-    <el-backtop 
-      :right="40" 
-      :bottom="40"
-      :visibility-height="300"
-    />
+    <el-backtop :right="40" :bottom="40" :visibility-height="300" />
   </div>
 </template>
 
@@ -39,8 +39,19 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL
 const userStore = useUserStore()
 const router = useRouter()
 
-const activeTab = ref('videos')
-const videoList = ref([])
+type TabName = 'videos' | 'likes' | 'favorites' | 'history'
+
+const activeTab = ref<TabName>('videos')
+interface VideoItem {
+  id: number
+  cover_image: string
+  title: string
+  user: string
+  duration: number
+  like_count: number
+  uploadTime: string
+}
+const videoList = ref<VideoItem[]>([])
 const page = ref(1)
 const pageSize = 8
 const total = ref(0)
@@ -77,7 +88,7 @@ const loadVideos = async () => {
         user: item.uploader_username || item.user,
         duration: item.duration,
         like_count: item.like_count || 0,
-        uploadTime: new Date(item.created_at).toLocaleString(),
+        uploadTime: new Date(item.created_at ?? 0).toLocaleString(),
       }
     })
     videoList.value.push(...mappedVideos)
@@ -87,7 +98,7 @@ const loadVideos = async () => {
     } else {
       page.value++
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('加载视频失败:', err.message)
   } finally {
     loading.value = false
@@ -115,7 +126,7 @@ onMounted(async () => {
     router.push('/login')
     return
   }
-  
+
   try {
     await userStore.fetchUserProfile()
     // 如果获取用户资料后用户仍为 null，重定向到登录页

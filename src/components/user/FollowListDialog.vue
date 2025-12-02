@@ -101,7 +101,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, type PropType } from 'vue'
-import { getFollowingList, getFansList, followUser, removeFollow, removeFan } from '@/api/user'
+import { getFollowingList, getFansList, followUser, removeFan } from '@/api/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
@@ -163,7 +163,7 @@ const fetchList = async (reset = false) => {
     const res = await api(params)
     console.log('API响应:', res)
     
-    let newItems = []
+    let newItems:any[] = []
     let newTotal = 0
     
     // 统一响应：{ code, msg, data, success }
@@ -213,7 +213,7 @@ const handleFollow = async (user: FollowUserItem) => {
       // 触发关注事件
       eventBus.emit(EVENTS.USER_FOLLOW_UPDATED, {
         action: 'follow',
-        current_user_id: userStore.user.id,
+        current_user_id: userStore.user!.id,
         target_user_id: user.id,
         current_following_count: res.data.following_count,
         current_follower_count: res.data.follower_count,
@@ -246,7 +246,7 @@ const handleUnfollow = async (user: FollowUserItem) => {
       // 触发关注事件
       eventBus.emit(EVENTS.USER_FOLLOW_UPDATED, {
         action: 'unfollow',
-        current_user_id: userStore.user.id,
+        current_user_id: userStore.user!.id,
         target_user_id: user.id,
         current_following_count: res.data.following_count,
         current_follower_count: res.data.follower_count,
@@ -282,7 +282,7 @@ const handleRemoveFan = async (user: FollowUserItem) => {
       // 触发关注事件
       eventBus.emit(EVENTS.USER_FOLLOW_UPDATED, {
         action: 'remove_fan',
-        current_user_id: userStore.user.id,
+        current_user_id: userStore.user!.id,
         target_user_id: user.id,
         current_following_count: res.data.following_count,
         current_follower_count: res.data.follower_count

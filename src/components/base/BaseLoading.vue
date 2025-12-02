@@ -47,12 +47,12 @@ const props = defineProps({
   type: {
     type: String,
     default: 'spinner',
-    validator: (value) => ['spinner', 'dots', 'pulse', 'wave'].includes(value)
+    validator: (value) => ['spinner', 'dots', 'pulse', 'wave'].includes(value as string)
   },
   size: {
     type: String,
     default: 'default',
-    validator: (value) => ['small', 'default', 'large'].includes(value)
+    validator: (value) => ['small', 'default', 'large'].includes(value as string)
   },
   color: {
     type: String,

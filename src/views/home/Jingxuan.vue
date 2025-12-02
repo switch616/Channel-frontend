@@ -23,13 +23,9 @@
         </el-tab-pane>
       </el-tabs>
     </div>
-    
+
     <!-- 回到顶部按钮 -->
-    <el-backtop 
-      :right="40" 
-      :bottom="40"
-      :visibility-height="300"
-    />
+    <el-backtop :right="40" :bottom="40" :visibility-height="300" />
   </div>
 </template>
 
@@ -44,7 +40,12 @@ import { getHotVideos } from '@/api/video'
 const appTitle = import.meta.env.VITE_APP_TITLE
 const activeTab = ref('recommend')
 
-const bannerList = ref([])
+interface BannerItem {
+  id: number
+  image: string
+}
+
+const bannerList = ref<BannerItem[]>([])
 
 const fetchHotBanners = async () => {
   try {
