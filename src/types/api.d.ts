@@ -14,51 +14,9 @@ export interface CaptchaResponse {
   captcha_id: string
 }
 
-// 用户相关类型
-export interface User {
-  id: number
-  username: string
-  email: string
-  avatar?: string
-  signature?: string
-  following_count?: number
-  follower_count?: number
-  video_count?: number
-  [key: string]: any
-}
-
-// 视频相关类型
-export interface Video {
-  id: number
-  title: string
-  description?: string
-  cover_url: string
-  video_url: string
-  author_id: number
-  author?: User
-  like_count?: number
-  comment_count?: number
-  view_count?: number
-  created_at?: string
-  updated_at?: string
-  [key: string]: any
-}
-
-// 评论相关类型
-export interface Comment {
-  id: number
-  video_id: number
-  user_id: number
-  user?: User
-  content: string
-  parent_id?: number
-  like_count?: number
-  dislike_count?: number
-  reply_count?: number
-  created_at?: string
-  replies?: Comment[]
-  [key: string]: any
-}
+export * from './models/user'
+export * from './models/video'
+export * from './models/comment'
 
 // 分页参数
 export interface PaginationParams {

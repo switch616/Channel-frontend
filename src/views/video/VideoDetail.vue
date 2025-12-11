@@ -4,7 +4,7 @@
       <div class="video-loading-spinner"></div>
       <div class="video-loading-text">缓冲中...</div>
     </div>
-    <template v-else>
+    <template v-else-if="videoDetail">
       <div class="video-header">
         <div class="video-info">
           <h2 class="video-title">{{ videoDetail.title }}</h2>
@@ -20,26 +20,26 @@
             <!-- 互相关注状态 -->
             <div v-if="isMutual" class="follow-status-container">
               <el-tag size="small" type="success" class="status-tag">互相关注</el-tag>
-              <el-button size="small" type="danger" @click="follow" class="unfollow-btn">
+              <el-button size="small" type="danger" @click="handleFollow" class="unfollow-btn">
                 取消关注
               </el-button>
             </div>
             <!-- 已关注状态 -->
             <div v-else-if="isFollowed" class="follow-status-container">
               <el-tag size="small" type="info" class="status-tag">已关注</el-tag>
-              <el-button size="small" type="danger" @click="follow" class="unfollow-btn">
+              <el-button size="small" type="danger" @click="handleFollow" class="unfollow-btn">
                 取消关注
               </el-button>
             </div>
             <!-- 回关状态（对方关注了我，但我没有关注对方） -->
             <div v-else-if="isFollower" class="follow-status-container">
               <el-tag size="small" type="warning" class="status-tag">粉丝</el-tag>
-              <el-button size="small" type="primary" @click="follow" class="follow-btn">
+              <el-button size="small" type="primary" @click="handleFollow" class="follow-btn">
                 回关
               </el-button>
             </div>
             <!-- 关注按钮（未关注状态） -->
-            <el-button v-else type="primary" size="small" @click="follow" class="follow-btn">
+            <el-button v-else type="primary" size="small" @click="handleFollow" class="follow-btn">
               关注
             </el-button>
           </template>
@@ -99,7 +99,7 @@
           <el-input v-model="commentText" placeholder="说点什么..." type="textarea" :rows="2" ref="commentInputRef"
             maxlength="200" show-word-limit class="comment-input" />
           <div class="comment-actions">
-            <el-button type="primary" size="small" @click="submitComment">发送</el-button>
+              <el-button type="primary" size="small" @click="handleSubmitComment">发送</el-button>
           </div>
         </div>
         <el-divider />
@@ -135,6 +135,9 @@
         </div>
       </div>
     </template>
+    <template v-else>
+      <div class="video-error">视频不存在或已被删除</div>
+    </template>
 
     <!-- 回到顶部按钮 -->
     <el-backtop :right="40" :bottom="40" :visibility-height="300" />
@@ -142,79 +145,96 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import {
-  getVideoDetail,
-  likeVideo,
-  favoriteVideo,
-  getVideoComments,
-  addComment,
-  likeComment as likeCommentAPI,
-  dislikeComment as dislikeCommentAPI,
-  deleteComment
-} from '@/api/video'
-import CommentItem from '@/components/video/CommentItem.vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { StarFilled, CollectionTag, ChatDotRound } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/user'
-import { storeToRefs } from 'pinia'
-import dayjs from 'dayjs'
-import { followUser } from '@/api/user'
-import { eventBus, EVENTS } from '@/utils/eventBus'
+import CommentItem from '@/components/video/CommentItem.vue'
 import VideoPlayer from '@/components/video/VideoPlayer.vue'
-
-const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')
-function resolveUrl(path: any) {
-  if (!path) return ''
-  if (/^https?:\/\//.test(path)) return path
-  return `${baseUrl}/${path.replace(/^\/+/, '')}`
-}
-
-const userStore = useUserStore()
-const { user } = storeToRefs(userStore)
+import { useVideoDetail } from '@/composables/useVideoDetail'
+import { useComments } from '@/composables/useComments'
 
 const route = useRoute()
 const videoId = route.params.id as string
-const videoDetail = ref<any | null>(null)
-const loading = ref(true)
+
+const {
+  videoDetail,
+  loading,
+  interactionState,
+  previewImg,
+  videoSource,
+  author,
+  likeCount,
+  favoriteCount,
+  commentCount,
+  isSelf,
+  loadDetail,
+  handleLike,
+  handleFavorite,
+  handleFollow,
+  goToUserProfile,
+  currentUserId
+} = useVideoDetail(videoId)
+
+const isLiked = computed(() => interactionState.value.isLiked)
+const isFavorited = computed(() => interactionState.value.isFavorited)
+const isFollowed = computed(() => interactionState.value.isFollowed)
+const isMutual = computed(() => interactionState.value.isMutual)
+const isFollower = computed(() => interactionState.value.isFollower)
+const currentVideoOwnerId = computed(() => videoDetail.value?.uploader?.id)
+
+const {
+  comments,
+  commentOrder,
+  commentLoading,
+  hasMoreComments,
+  loadComments,
+  loadMoreComments,
+  changeCommentOrder,
+  submitComment,
+  handleLikeComment,
+  handleDislikeComment,
+  handleDeleteComment
+} = useComments(videoId)
 
 const isPlaying = ref(false)
+const commentText = ref('')
+const commentInputRef = ref()
 
-// 视频交互状态
-const isLiked = ref(false)
-const isFavorited = ref(false)
-const isFollowed = ref(false)
-const isMutual = ref(false)
-const isFollower = ref(false)
+const startPlay = () => {
+  isPlaying.value = true
+}
 
-const refreshVideoDetail = async () => {
-  const res = await getVideoDetail(parseInt(videoId))
-
-  // 统一响应：{ code, msg, data, success }
-  if (!res?.success) {
-    throw new Error(res?.msg || '获取视频详情失败')
+const handleKeydown = (event: KeyboardEvent) => {
+  if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
+    event.preventDefault()
   }
+}
 
-  videoDetail.value = res.data
-  isFollowed.value = res.data?.uploader?.is_followed || false
-  isMutual.value = res.data?.uploader?.is_mutual || false
-  isFollower.value = res.data?.uploader?.is_follower || false
+const commentFocus = () => {
+  commentInputRef.value && commentInputRef.value.focus()
+}
+
+const handleSubmitComment = async () => {
+  const ok = await submitComment(commentText.value, null)
+  if (ok && videoDetail.value) {
+    videoDetail.value.comment_count = (videoDetail.value.comment_count || 0) + 1
+    commentText.value = ''
+  }
+}
+
+const handleReplyComment = async ({ parent, content }: { parent: any; content: string }) => {
+  const ok = await submitComment(content, parent.id)
+  if (ok && videoDetail.value) {
+    videoDetail.value.comment_count = (videoDetail.value.comment_count || 0) + 1
+  }
 }
 
 onMounted(async () => {
   loading.value = true
   try {
-    await refreshVideoDetail()
-
-    // 设置交互状态
-    isLiked.value = videoDetail.value.is_liked || false
-    isFavorited.value = videoDetail.value.is_collected || false
-    // isFollowed 已在refreshVideoDetail中赋值
-    // 加载评论
+    await loadDetail()
     await loadComments(true)
-
-    // 添加键盘事件监听
     document.addEventListener('keydown', handleKeydown)
   } catch (error) {
     console.error('加载视频详情失败:', error)
@@ -224,428 +244,9 @@ onMounted(async () => {
   }
 })
 
-// 组件卸载时移除事件监听和清理定时器
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
 })
-
-const previewImg = computed(() => resolveUrl(videoDetail.value?.cover_image))
-const videoSource = computed(() => videoDetail.value ? {
-  '720p': { url: resolveUrl(videoDetail.value.file_path), label: '720P' }
-} : {})
-const author = computed(() => {
-  const u = videoDetail.value?.uploader || {}
-  return {
-    ...u,
-    profile_picture: resolveUrl(u.profile_picture)
-  }
-})
-const likeCount = computed(() => videoDetail.value?.like_count || 0)
-const favoriteCount = computed(() => videoDetail.value?.collect_count || 0)
-const commentCount = computed(() => videoDetail.value?.comment_count || 0)
-
-const isSelf = computed(() => {
-  return user.value && videoDetail.value?.uploader && user.value.id === videoDetail.value.uploader.id
-})
-
-// 计算属性确保数据正确传递
-const currentUserId = computed(() => {
-  return user.value?.id
-})
-
-const currentVideoOwnerId = computed(() => {
-  return videoDetail.value?.uploader?.id
-})
-
-// 视频交互功能
-const handleLike = async () => {
-  try {
-    const res = await likeVideo(parseInt(videoId))
-    if (!res?.success) {
-      throw new Error(res?.msg || '点赞失败')
-    }
-    if (res.data) {
-      videoDetail.value.like_count = res.data.like_count
-      isLiked.value = res.data.is_liked
-    }
-    ElMessage.success(isLiked.value ? '点赞成功' : '取消点赞')
-  } catch (error) {
-    console.error('点赞失败:', error)
-    ElMessage.error('操作失败')
-  }
-}
-
-const handleFavorite = async () => {
-  try {
-    const res = await favoriteVideo(parseInt(videoId))
-    if (!res?.success) {
-      throw new Error(res?.msg || '收藏失败')
-    }
-    if (res.data) {
-      videoDetail.value.collect_count = res.data.collect_count
-      isFavorited.value = res.data.is_collected
-    }
-    ElMessage.success(isFavorited.value ? '收藏成功' : '取消收藏')
-  } catch (error) {
-    console.error('收藏失败:', error)
-    ElMessage.error('操作失败')
-  }
-}
-
-const follow = async () => {
-  console.log('[DEBUG] 当前关注状态:', {
-    isFollowed: isFollowed.value,
-    isMutual: isMutual.value,
-    isFollower: isFollower.value
-  })
-
-  if (isFollowed.value || isMutual.value) {
-    // 取消关注需弹窗
-    try {
-      await ElMessageBox.confirm('确定要取消关注该用户吗？', '提示', {
-        confirmButtonText: '取消关注',
-        cancelButtonText: '再想想',
-        type: 'warning',
-      })
-      const res = await followUser(author.value.id)
-      if (!res?.success) {
-        throw new Error(res?.msg || '取消关注失败')
-      }
-
-      // 立即更新本地状态
-      if (res.data) {
-        isFollowed.value = res.data.is_followed
-        isMutual.value = res.data.is_mutual
-        isFollower.value = res.data.is_follower
-
-        userStore.updateFollowStats(res.data.following_count, res.data.follower_count)
-        // 触发关注事件，通知其他用户更新数据
-        eventBus.emit(EVENTS.USER_FOLLOW_UPDATED, {
-          action: 'unfollow',
-          current_user_id: user.value!.id,
-          target_user_id: author.value.id,
-          current_following_count: res.data.following_count,
-          current_follower_count: res.data.follower_count,
-          target_follower_count: res.data.follower_count // 被关注用户的粉丝数
-        })
-      }
-      ElMessage.success('已取消关注')
-    } catch (error) {
-      if (error !== 'cancel') ElMessage.error('操作失败')
-    }
-  } else {
-    // 关注或回关
-    try {
-      const res = await followUser(author.value.id)
-      if (!res?.success) {
-        throw new Error(res?.msg || '关注失败')
-      }
-
-      // 立即更新本地状态
-      if (res.data) {
-        isFollowed.value = res.data.is_followed
-        isMutual.value = res.data.is_mutual
-        isFollower.value = res.data.is_follower
-
-        userStore.updateFollowStats(res.data.following_count, res.data.follower_count)
-        // 触发关注事件，通知其他用户更新数据
-        eventBus.emit(EVENTS.USER_FOLLOW_UPDATED, {
-          action: 'follow',
-          current_user_id: user.value!.id,
-          target_user_id: author.value.id,
-          current_following_count: res.data.following_count,
-          current_follower_count: res.data.follower_count,
-          target_follower_count: res.data.follower_count // 被关注用户的粉丝数
-        })
-      }
-
-      // 根据关注状态显示不同的提示
-      if (res.data?.is_mutual) {
-        ElMessage.success('互相关注成功！')
-      } else if (res.data?.is_followed && res.data?.is_follower) {
-        ElMessage.success('回关成功！')
-      } else if (res.data?.is_followed) {
-        ElMessage.success('关注成功！')
-      }
-    } catch (error) {
-      ElMessage.error('关注失败')
-    }
-  }
-}
-
-const startPlay = () => {
-  isPlaying.value = true
-}
-
-// 防止键盘事件导致页面刷新
-const handleKeydown = (event: KeyboardEvent) => {
-  // 阻止空格键、方向键等默认行为
-  if (['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
-    event.preventDefault()
-  }
-}
-
-// 评论相关
-const commentText = ref('')
-const commentInputRef = ref()
-const comments = ref<any[]>([])
-const commentPage = ref(1)
-const commentSize = ref(20)
-const commentTotal = ref(0)
-const commentOrder = ref<'latest' | 'hottest'>('latest') // 'latest' 或 'hottest'
-const commentLoading = ref(false)
-const hasMoreComments = ref(true)
-
-const loadComments = async (reset = false) => {
-  if (commentLoading.value) return
-
-  try {
-    commentLoading.value = true
-
-    if (reset) {
-      commentPage.value = 1
-      comments.value = []
-    }
-
-    const res = await getVideoComments(parseInt(videoId), {
-      page: commentPage.value,
-      size: commentSize.value,
-      order: commentOrder.value
-    })
-
-    const newComments = (res.data?.items || []).map(mapComment)
-
-    if (reset) {
-      comments.value = newComments
-    } else {
-      comments.value.push(...newComments)
-    }
-
-    commentTotal.value = res.data?.total || 0
-    hasMoreComments.value = comments.value.length < commentTotal.value
-
-    if (!reset) {
-      commentPage.value++
-    }
-  } catch (error) {
-    console.error('加载评论失败:', error)
-    ElMessage.error('加载评论失败')
-  } finally {
-    commentLoading.value = false
-  }
-}
-
-const changeCommentOrder = async (order: 'latest' | 'hottest') => {
-  commentOrder.value = order
-  await loadComments(true)
-}
-
-const loadMoreComments = async () => {
-  if (hasMoreComments.value && !commentLoading.value) {
-    await loadComments()
-  }
-}
-
-function mapComment(item: any) {
-  // 映射后端结构到前端结构
-  return {
-    ...item,
-    id: parseInt(item.id), // 确保ID是数字类型
-    username: item.user?.username || '',
-    avatar: resolveUrl(item.user?.profile_picture),
-    user_id: item.user?.id || item.user_id,
-    video_id: parseInt(videoId), // 确保video_id被传递
-    time: dayjs(item.created_at).format('YYYY-MM-DD HH:mm:ss'),
-    likes: item.like_count || 0,
-    dislikes: item.dislike_count || 0,
-    replyCount: item.reply_count || 0,
-    replies: [], // 用于存储回复列表
-    children: [] // 保持兼容性
-  }
-}
-
-const commentFocus = () => {
-  commentInputRef.value && commentInputRef.value.focus()
-}
-
-const submitComment = async () => {
-  if (!commentText.value.trim()) {
-    ElMessage.warning('请输入评论内容')
-    return
-  }
-  try {
-    const res = await addComment(parseInt(videoId), {
-      content: commentText.value,
-      parent_id: null
-    })
-
-    // 直接添加新评论到列表顶部，而不是重新加载
-    if (res.data) {
-      const newComment = mapComment(res.data)
-      comments.value.unshift(newComment)
-      commentTotal.value++
-    }
-
-    commentText.value = ''
-    ElMessage.success('评论成功！')
-  } catch (error) {
-    console.error('发表评论失败:', error)
-    ElMessage.error('评论失败')
-  }
-}
-
-const handleLikeComment = async (comment: any) => {
-  try {
-    const res = await likeCommentAPI(comment.id)
-
-    // 直接更新评论的点赞数
-    if (res.data && res.data.success) {
-      const targetComment = findCommentById(comments.value, comment.id)
-      if (targetComment) {
-        // 使用Vue的响应式更新
-        Object.assign(targetComment, {
-          likes: res.data.like_count,
-          dislikes: res.data.dislike_count
-        })
-        // 强制触发响应式更新
-        await nextTick()
-      }
-    }
-    ElMessage.success('点赞成功！')
-  } catch (error) {
-    console.error('评论点赞失败:', error)
-    ElMessage.error('操作失败')
-  }
-}
-
-const handleDislikeComment = async (comment: any) => {
-  try {
-    const res = await dislikeCommentAPI(comment.id)
-
-    // 直接更新评论的踩数
-    if (res.data && res.data.success) {
-      const targetComment = findCommentById(comments.value, comment.id)
-      if (targetComment) {
-        // 使用Vue的响应式更新
-        Object.assign(targetComment, {
-          likes: res.data.like_count,
-          dislikes: res.data.dislike_count
-        })
-        // 强制触发响应式更新
-        await nextTick()
-      }
-    }
-    ElMessage.success('踩成功！')
-  } catch (error) {
-    console.error('评论踩失败:', error)
-    ElMessage.error('操作失败')
-  }
-}
-
-// 递归查找评论
-const findCommentById = (commentList: any[], commentId: number | string): any | null => {
-  for (const comment of commentList) {
-    // 确保ID类型匹配
-    if (comment.id == commentId) {
-      return comment
-    }
-    // 递归查找回复中的评论
-    if (comment.replies && comment.replies.length > 0) {
-      const found = findCommentById(comment.replies, commentId)
-      if (found) return found
-    }
-    // 也检查children数组（兼容性）
-    if (comment.children && comment.children.length > 0) {
-      const found = findCommentById(comment.children, commentId)
-      if (found) return found
-    }
-  }
-  return null
-}
-
-
-
-const handleReplyComment = async ({ parent, content }: { parent: any; content: string }) => {
-  try {
-    const res = await addComment(parseInt(videoId), {
-      content,
-      parent_id: parent.id
-    })
-
-    // 直接添加新回复到对应评论的回复列表
-    if (res.data) {
-      const newReply = mapComment(res.data)
-      const targetComment = findCommentById(comments.value, parent.id)
-      if (targetComment) {
-        // 确保replies数组存在
-        if (!targetComment.replies) {
-          targetComment.replies = []
-        }
-        // 添加新回复到开头
-        targetComment.replies.unshift(newReply)
-        // 更新回复数
-        targetComment.replyCount = (targetComment.replyCount || 0) + 1
-      }
-    }
-
-    ElMessage.success('回复成功！')
-  } catch (error) {
-    console.error('回复失败:', error)
-    ElMessage.error('回复失败')
-  }
-}
-
-const handleDeleteComment = async (comment: any) => {
-  try {
-    await ElMessageBox.confirm('确定要删除这条评论吗？', '提示', {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-
-    await deleteComment(comment.id)
-
-    // 直接从列表中移除评论
-    removeCommentById(comments.value, comment.id)
-    commentTotal.value = Math.max(0, commentTotal.value - 1)
-
-    ElMessage.success('删除成功！')
-  } catch (error) {
-    console.error('删除评论失败:', error)
-    if (error !== 'cancel') {
-      ElMessage.error('删除失败')
-    }
-  }
-}
-
-// 递归移除评论
-const removeCommentById = (commentList: any[], commentId: number | string): boolean => {
-  for (let i = 0; i < commentList.length; i++) {
-    if (commentList[i].id === commentId) {
-      commentList.splice(i, 1)
-      return true
-    }
-    // 递归查找回复中的评论
-    if (commentList[i].replies && commentList[i].replies.length > 0) {
-      if (removeCommentById(commentList[i].replies, commentId)) {
-        return true
-      }
-    }
-  }
-  return false
-}
-
-const router = useRouter()
-function goToUserProfile() {
-  const myId = userStore.user?.id
-  const authorId = videoDetail.value?.uploader?.id
-  if (!authorId) return
-  if (myId && authorId == myId) {
-    router.push('/user/profile')
-  } else {
-    router.push(`/user/${authorId}`)
-  }
-}
 </script>
 
 <style scoped>
