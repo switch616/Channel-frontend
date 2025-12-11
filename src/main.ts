@@ -8,6 +8,8 @@ import ElementPlus from 'element-plus'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
+import VuePlyr from 'vue-plyr'
+import 'vue-plyr/dist/vue-plyr.css'
 
 // 全局错误处理
 window.addEventListener('error', (event: ErrorEvent) => {
@@ -62,5 +64,8 @@ if (userStore.token) {
 
 app.use(ElementPlus)
 app.use(router)
+app.use(VuePlyr, {
+    plyr: {}
+  })
 app.mount('#app')
 

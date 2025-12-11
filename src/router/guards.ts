@@ -1,70 +1,71 @@
 // src/router/guards.ts
-import { Router } from 'vue-router'
-import { getToken, removeToken } from '@/utils/auth'
-import { useMeta } from '@/utils/useMeta'
-import { preloadUserProfile } from '@/utils/preload'
+import { Router } from "vue-router";
+import { getToken, removeToken } from "@/utils/auth";
+import { useMeta } from "@/utils/useMeta";
+import { preloadUserProfile } from "@/utils/preload";
 
 // 安装所有全局守卫
 export function setupRouterGuards(router: Router): void {
-  setupAuthGuard(router)
-  setupMetaGuard(router)
-  setupExpiredTokenGuard(router)
+  setupAuthGuard(router);
+  setupMetaGuard(router);
+  setupExpiredTokenGuard(router);
 }
 
 // 认证守卫：拦截需要登录的页面
 function setupAuthGuard(router: Router): void {
   router.beforeEach((to, _from, next) => {
-    const token = getToken()
+    const token = getToken();
     if (to.meta.requiresAuth && !token) {
-      return next('/login')
+      return next("/login");
     }
-    
+
     // 路由级别的预加载 - 只有在有 token 且目标路由不是登录页的情况下才预加载
     // 避免退出登录跳转到登录页时触发预加载
-    if (token && 
-        to.path !== '/login' && 
-        to.name !== 'Login' && 
-        (to.name === 'UserProfile' || to.path === '/user/profile')) {
+    if (
+      token &&
+      to.path !== "/login" &&
+      to.name !== "Login" &&
+      (to.name === "UserProfile" || to.path === "/user/profile")
+    ) {
       // 预加载用户资料
-      preloadUserProfile()
+      preloadUserProfile();
     }
-    
-    next()
-  })
+
+    next();
+  });
 }
 
 // SEO Meta TDK 设置守卫
 function setupMetaGuard(router: Router): void {
   router.beforeEach((to, _from, next) => {
-    const meta = to.meta || {}
+    const meta = to.meta || {};
     useMeta({
       title: meta.title as string | undefined,
       description: meta.description as string | undefined,
       keywords: meta.keywords as string | undefined,
-    })
-    next()
-  })
+    });
+    next();
+  });
 }
 
 // token 过期处理
 function setupExpiredTokenGuard(router: Router): void {
-  router.afterEach((_to, _from) => {
-    const token = getToken()
+  router.afterEach((_, _from) => {
+    const token = getToken();
     if (token && isTokenExpired(token)) {
-      removeToken()
-      router.push('/login')
+      removeToken();
+      router.push("/login");
     }
-  })
+  });
 }
 
 // token 过期检测方法
 function isTokenExpired(token: string): boolean {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    const expiryTime = payload.exp * 1000
-    return Date.now() > expiryTime
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const expiryTime = payload.exp * 1000;
+    return Date.now() > expiryTime;
   } catch (err) {
-    return true // token 不合法直接认为过期
+    return true; // token 不合法直接认为过期
   }
 }
-

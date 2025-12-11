@@ -5,7 +5,7 @@
       <div class="video-loading-text">缓冲中...</div>
     </div>
     <template v-else>
-      <div class="video-header el-card">
+      <div class="video-header">
         <div class="video-info">
           <h2 class="video-title">{{ videoDetail.title }}</h2>
           <div class="video-desc">{{ videoDetail.description }}</div>
@@ -20,47 +20,26 @@
             <!-- 互相关注状态 -->
             <div v-if="isMutual" class="follow-status-container">
               <el-tag size="small" type="success" class="status-tag">互相关注</el-tag>
-              <el-button 
-                size="small"
-                type="danger" 
-                @click="follow"
-                class="unfollow-btn"
-              >
+              <el-button size="small" type="danger" @click="follow" class="unfollow-btn">
                 取消关注
               </el-button>
             </div>
             <!-- 已关注状态 -->
             <div v-else-if="isFollowed" class="follow-status-container">
               <el-tag size="small" type="info" class="status-tag">已关注</el-tag>
-              <el-button 
-                size="small"
-                type="danger" 
-                @click="follow"
-                class="unfollow-btn"
-              >
+              <el-button size="small" type="danger" @click="follow" class="unfollow-btn">
                 取消关注
               </el-button>
             </div>
             <!-- 回关状态（对方关注了我，但我没有关注对方） -->
             <div v-else-if="isFollower" class="follow-status-container">
               <el-tag size="small" type="warning" class="status-tag">粉丝</el-tag>
-              <el-button 
-                size="small"
-                type="primary" 
-                @click="follow"
-                class="follow-btn"
-              >
+              <el-button size="small" type="primary" @click="follow" class="follow-btn">
                 回关
               </el-button>
             </div>
             <!-- 关注按钮（未关注状态） -->
-            <el-button 
-              v-else
-              type="primary" 
-              size="small"
-              @click="follow"
-              class="follow-btn"
-            >
+            <el-button v-else type="primary" size="small" @click="follow" class="follow-btn">
               关注
             </el-button>
           </template>
@@ -71,52 +50,47 @@
       </div>
       <div class="video-section-outer">
         <div class="video-section-inner">
-          <div
-            class="video-blur-bg"
-            :style="{ backgroundImage: `url('${previewImg}')` }"
-          ></div>
+          <div class="video-blur-bg" :style="{ backgroundImage: `url('${previewImg}')` }"></div>
           <div v-if="!isPlaying" class="video-player-real">
             <div class="video-player-wrapper">
               <img :src="previewImg" class="preview-img" />
               <button class="play-btn" @click="startPlay">
-                <svg viewBox="0 0 100 100" width="60" height="60"><circle cx="50" cy="50" r="48" fill="rgba(0,0,0,0.5)"/><polygon points="40,30 75,50 40,70" fill="#fff"/></svg>
+                <svg viewBox="0 0 100 100" width="60" height="60">
+                  <circle cx="50" cy="50" r="48" fill="rgba(0,0,0,0.5)" />
+                  <polygon points="40,30 75,50 40,70" fill="#fff" />
+                </svg>
               </button>
             </div>
           </div>
           <div v-else class="video-player-real">
             <div class="video-player-wrapper">
-              <video
-                :src="videoSource['720p']?.url"
-                :poster="previewImg"
-                class="video-element"
-                controls
-                autoplay
-                loop
-                muted
-                playsinline
-                @waiting="handleWaiting"
-                @playing="handlePlaying"
-                @canplay="handleCanPlay"
-                @loadeddata="handleLoadedData"
-              />
+              <video :src="videoSource['720p']?.url" :poster="previewImg" class="video-element" controls autoplay loop
+                muted playsinline @waiting="handleWaiting" @playing="handlePlaying" @canplay="handleCanPlay"
+                @loadeddata="handleLoadedData" />
             </div>
           </div>
         </div>
       </div>
-      <div class="video-stats el-card">
+      <div class="video-stats">
         <div class="stat-item">
           <el-button type="primary" text @click="handleLike">
-            <el-icon><StarFilled /></el-icon> {{ isLiked ? '已点赞' : '点赞' }} {{ likeCount }}
+            <el-icon>
+              <StarFilled />
+            </el-icon> {{ isLiked ? '已点赞' : '点赞' }} {{ likeCount }}
           </el-button>
         </div>
         <div class="stat-item">
           <el-button type="warning" text @click="handleFavorite">
-            <el-icon><CollectionTag /></el-icon> {{ isFavorited ? '已收藏' : '收藏' }} {{ favoriteCount }}
+            <el-icon>
+              <CollectionTag />
+            </el-icon> {{ isFavorited ? '已收藏' : '收藏' }} {{ favoriteCount }}
           </el-button>
         </div>
         <div class="stat-item">
           <el-button type="info" text @click="commentFocus">
-            <el-icon><ChatDotRound /></el-icon> 评论 {{ commentCount }}
+            <el-icon>
+              <ChatDotRound />
+            </el-icon> 评论 {{ commentCount }}
           </el-button>
         </div>
       </div>
@@ -124,22 +98,14 @@
         <h3>评论区 ({{ commentCount }})</h3>
         <!-- 主评论输入框 -->
         <div class="comment-input-section">
-          <el-input
-            v-model="commentText"
-            placeholder="说点什么..."
-            type="textarea"
-            :rows="2"
-            ref="commentInputRef"
-            maxlength="200"
-            show-word-limit
-            class="comment-input"
-          />
+          <el-input v-model="commentText" placeholder="说点什么..." type="textarea" :rows="2" ref="commentInputRef"
+            maxlength="200" show-word-limit class="comment-input" />
           <div class="comment-actions">
             <el-button type="primary" size="small" @click="submitComment">发送</el-button>
           </div>
         </div>
         <el-divider />
-        
+
         <!-- 评论排序 -->
         <div class="comment-sort">
           <el-radio-group v-model="commentOrder" @change="changeCommentOrder">
@@ -147,35 +113,21 @@
             <el-radio-button value="hottest">最热</el-radio-button>
           </el-radio-group>
         </div>
-        
+
         <!-- 评论列表 -->
         <div class="comment-list">
           <div v-if="comments.length === 0 && !commentLoading" class="no-comment">暂无评论</div>
           <div v-if="commentLoading && comments.length === 0" class="comment-loading">
             <el-skeleton :rows="3" animated />
           </div>
-          <CommentItem
-            v-for="comment in comments"
-            :key="comment.id"
-            :comment="comment"
-            :level="0"
-            :children="comment.children || []"
-            :userId="currentUserId"
-            :videoOwnerId="currentVideoOwnerId"
-            @like="handleLikeComment"
-            @dislike="handleDislikeComment"
-            @reply="handleReplyComment"
-            @delete="handleDeleteComment"
-          />
-          
+          <CommentItem v-for="comment in comments" :key="comment.id" :comment="comment" :level="0"
+            :children="comment.children || []" :userId="currentUserId" :videoOwnerId="currentVideoOwnerId"
+            @like="handleLikeComment" @dislike="handleDislikeComment" @reply="handleReplyComment"
+            @delete="handleDeleteComment" />
+
           <!-- 加载更多 -->
           <div v-if="hasMoreComments" class="load-more-comments">
-            <el-button 
-              :loading="commentLoading" 
-              @click="loadMoreComments"
-              type="primary" 
-              plain
-            >
+            <el-button :loading="commentLoading" @click="loadMoreComments" type="primary" plain>
               加载更多评论
             </el-button>
           </div>
@@ -185,26 +137,22 @@
         </div>
       </div>
     </template>
-    
+
     <!-- 回到顶部按钮 -->
-    <el-backtop 
-      :right="40" 
-      :bottom="40"
-      :visibility-height="300"
-    />
+    <el-backtop :right="40" :bottom="40" :visibility-height="300" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { 
-  getVideoDetail, 
-  likeVideo, 
-  favoriteVideo, 
-  getVideoComments, 
-  addComment, 
-  likeComment as likeCommentAPI, 
+import {
+  getVideoDetail,
+  likeVideo,
+  favoriteVideo,
+  getVideoComments,
+  addComment,
+  likeComment as likeCommentAPI,
   dislikeComment as dislikeCommentAPI,
   deleteComment
 } from '@/api/video'
@@ -218,7 +166,7 @@ import { followUser } from '@/api/user'
 import { eventBus, EVENTS } from '@/utils/eventBus'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')
-function resolveUrl(path:any) {
+function resolveUrl(path: any) {
   if (!path) return ''
   if (/^https?:\/\//.test(path)) return path
   return `${baseUrl}/${path.replace(/^\/+/, '')}`
@@ -234,7 +182,7 @@ const loading = ref(true)
 const videoReady = ref(false)
 let loadingTimeout: number | null = null
 
-function handleWaiting() { 
+function handleWaiting() {
   // 只有在视频真正缓冲时才显示加载状态
   if (videoReady.value) {
     // 清除之前的定时器
@@ -243,18 +191,18 @@ function handleWaiting() {
     }
     // 延迟显示加载状态，避免快速切换
     loadingTimeout = setTimeout(() => {
-      loading.value = true 
+      loading.value = true
     }, 200)
   }
 }
 
-function handlePlaying() { 
+function handlePlaying() {
   // 清除定时器
   if (loadingTimeout) {
     clearTimeout(loadingTimeout)
     loadingTimeout = null
   }
-  loading.value = false 
+  loading.value = false
 }
 
 function handleCanPlay() {
@@ -294,14 +242,14 @@ onMounted(async () => {
   loading.value = true
   try {
     await refreshVideoDetail()
-    
+
     // 设置交互状态
     isLiked.value = videoDetail.value.is_liked || false
     isFavorited.value = videoDetail.value.is_collected || false
     // isFollowed 已在refreshVideoDetail中赋值
     // 加载评论
     await loadComments(true)
-    
+
     // 添加键盘事件监听
     document.addEventListener('keydown', handleKeydown)
   } catch (error) {
@@ -390,7 +338,7 @@ const follow = async () => {
     isMutual: isMutual.value,
     isFollower: isFollower.value
   })
-  
+
   if (isFollowed.value || isMutual.value) {
     // 取消关注需弹窗
     try {
@@ -450,7 +398,7 @@ const follow = async () => {
           target_follower_count: res.data.follower_count // 被关注用户的粉丝数
         })
       }
-      
+
       // 根据关注状态显示不同的提示
       if (res.data?.is_mutual) {
         ElMessage.success('互相关注成功！')
@@ -490,32 +438,32 @@ const hasMoreComments = ref(true)
 
 const loadComments = async (reset = false) => {
   if (commentLoading.value) return
-  
+
   try {
     commentLoading.value = true
-    
+
     if (reset) {
       commentPage.value = 1
       comments.value = []
     }
-    
+
     const res = await getVideoComments(parseInt(videoId), {
       page: commentPage.value,
       size: commentSize.value,
       order: commentOrder.value
     })
-    
+
     const newComments = (res.data?.items || []).map(mapComment)
-    
+
     if (reset) {
       comments.value = newComments
     } else {
       comments.value.push(...newComments)
     }
-    
+
     commentTotal.value = res.data?.total || 0
     hasMoreComments.value = comments.value.length < commentTotal.value
-    
+
     if (!reset) {
       commentPage.value++
     }
@@ -570,14 +518,14 @@ const submitComment = async () => {
       content: commentText.value,
       parent_id: null
     })
-    
+
     // 直接添加新评论到列表顶部，而不是重新加载
     if (res.data) {
       const newComment = mapComment(res.data)
       comments.value.unshift(newComment)
       commentTotal.value++
     }
-    
+
     commentText.value = ''
     ElMessage.success('评论成功！')
   } catch (error) {
@@ -589,7 +537,7 @@ const submitComment = async () => {
 const handleLikeComment = async (comment: any) => {
   try {
     const res = await likeCommentAPI(comment.id)
-    
+
     // 直接更新评论的点赞数
     if (res.data && res.data.success) {
       const targetComment = findCommentById(comments.value, comment.id)
@@ -613,7 +561,7 @@ const handleLikeComment = async (comment: any) => {
 const handleDislikeComment = async (comment: any) => {
   try {
     const res = await dislikeCommentAPI(comment.id)
-    
+
     // 直接更新评论的踩数
     if (res.data && res.data.success) {
       const targetComment = findCommentById(comments.value, comment.id)
@@ -663,7 +611,7 @@ const handleReplyComment = async ({ parent, content }: { parent: any; content: s
       content,
       parent_id: parent.id
     })
-    
+
     // 直接添加新回复到对应评论的回复列表
     if (res.data) {
       const newReply = mapComment(res.data)
@@ -679,7 +627,7 @@ const handleReplyComment = async ({ parent, content }: { parent: any; content: s
         targetComment.replyCount = (targetComment.replyCount || 0) + 1
       }
     }
-    
+
     ElMessage.success('回复成功！')
   } catch (error) {
     console.error('回复失败:', error)
@@ -694,13 +642,13 @@ const handleDeleteComment = async (comment: any) => {
       cancelButtonText: '取消',
       type: 'warning',
     })
-    
+
     await deleteComment(comment.id)
-    
+
     // 直接从列表中移除评论
     removeCommentById(comments.value, comment.id)
     commentTotal.value = Math.max(0, commentTotal.value - 1)
-    
+
     ElMessage.success('删除成功！')
   } catch (error) {
     console.error('删除评论失败:', error)
@@ -749,46 +697,56 @@ function goToUserProfile() {
   flex-direction: column;
   gap: 24px;
 }
+
 .video-header {
-  display: flex;
+  display: flex !important;
+
   justify-content: space-between;
   align-items: flex-start;
   padding: 24px 24px 16px 24px;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.08);
 }
+
 .video-info {
   flex: 1;
 }
+
 .video-title {
   font-size: 22px;
   font-weight: bold;
   margin-bottom: 8px;
 }
+
 .video-desc {
   color: #888;
   font-size: 15px;
 }
+
 .author-info {
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 180px;
 }
+
 .author-meta {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
+
 .author-name {
   font-weight: bold;
   font-size: 16px;
 }
+
 .author-fans {
   color: #999;
   font-size: 13px;
 }
+
 .video-section-outer {
   display: flex;
   justify-content: center;
@@ -796,6 +754,7 @@ function goToUserProfile() {
   width: 100%;
   background: transparent;
 }
+
 .video-section-inner {
   border-radius: 20px;
   overflow: hidden;
@@ -805,10 +764,15 @@ function goToUserProfile() {
   justify-content: center;
   align-items: center;
 }
+
 .video-blur-bg {
   position: absolute;
-  left: 0; top: 0; right: 0; bottom: 0;
-  width: 100%; height: 100%;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
   background-size: cover;
   background-position: center;
   filter: blur(32px) brightness(0.7);
@@ -816,6 +780,7 @@ function goToUserProfile() {
   pointer-events: none;
   border-radius: 20px;
 }
+
 .video-player-real {
   position: relative;
   z-index: 2;
@@ -826,6 +791,7 @@ function goToUserProfile() {
   align-items: center;
   /* 不加圆角，overflow由外层控制 */
 }
+
 .video-player-wrapper {
   width: 100%;
   height: 100%;
@@ -833,22 +799,26 @@ function goToUserProfile() {
   justify-content: center;
   align-items: center;
 }
-:deep(.video-element), :deep(video) {
+
+:deep(.video-element),
+:deep(video) {
   width: 100%;
   height: 100%;
   object-fit: contain;
   background: transparent;
   /* 不要加 border-radius */
 }
+
 .preview-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   /* 不要加 border-radius */
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.10);
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.10);
   z-index: 2;
   position: relative;
 }
+
 .play-btn {
   position: absolute;
   left: 50%;
@@ -861,9 +831,11 @@ function goToUserProfile() {
   z-index: 2;
   transition: transform 0.2s;
 }
+
 .play-btn:hover {
   transform: translate(-50%, -50%) scale(1.08);
 }
+
 .video-stats {
   display: flex;
   justify-content: flex-start;
@@ -872,26 +844,31 @@ function goToUserProfile() {
   padding: 12px 24px;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.08);
 }
+
 .stat-item {
   display: flex;
   align-items: center;
 }
+
 .video-comments {
   padding: 24px 24px 16px 24px;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08);
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.08);
 }
+
 .comment-input {
   margin-bottom: 8px;
 }
+
 .comment-actions {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 8px;
 }
+
 .comment-sort {
   margin-bottom: 16px;
   padding: 0 4px;
@@ -904,69 +881,84 @@ function goToUserProfile() {
 .comment-loading {
   padding: 20px 0;
 }
+
 .no-comment {
   color: #bbb;
   text-align: center;
   padding: 16px 0;
 }
+
 .comment-item {
   padding: 16px 0;
   border-bottom: 1px solid #f0f0f0;
 }
+
 .comment-main {
   display: flex;
   gap: 12px;
   position: relative;
 }
+
 .comment-main[style*="margin-left: 32px"] {
   border-left: 2px solid #e1e5e9;
   padding-left: 12px;
 }
+
 .comment-main[style*="margin-left: 64px"] {
   border-left: 2px solid #e1e5e9;
   padding-left: 12px;
 }
+
 .comment-main[style*="margin-left: 96px"] {
   border-left: 2px solid #e1e5e9;
   padding-left: 12px;
 }
+
 .comment-avatar {
   flex-shrink: 0;
 }
+
 .comment-content {
   flex: 1;
   min-width: 0;
 }
+
 .comment-header {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 4px;
 }
+
 .comment-username {
   font-weight: bold;
   color: #409EFF;
   font-size: 14px;
 }
+
 .comment-time {
   color: #999;
   font-size: 12px;
 }
+
 .comment-text {
   margin-bottom: 8px;
   line-height: 1.5;
   color: #333;
 }
+
 .comment-actions-inline {
   display: flex;
   gap: 16px;
 }
+
 .comment-actions-inline .el-button {
   padding: 0;
   height: auto;
   font-size: 12px;
   color: #666;
 }
+
 .comment-actions-inline .el-button:hover {
   color: #409EFF;
 }
@@ -1002,9 +994,11 @@ function goToUserProfile() {
   background: #f8f9fa;
   border-radius: 8px;
 }
+
 .reply-input {
   margin-bottom: 8px;
 }
+
 .reply-actions {
   display: flex;
   justify-content: flex-end;
@@ -1018,41 +1012,52 @@ function goToUserProfile() {
   margin-top: 20px;
   padding: 16px 0;
 }
+
 .no-more-comments {
   width: 100%;
   text-align: center;
   color: #999;
   font-size: 14px;
 }
+
 .follow-btn {
   min-width: 64px;
   font-weight: bold;
   border-radius: 16px;
   transition: all 0.2s;
 }
+
 .follow-btn:not(.el-button--default) {
   background: #409eff;
   color: #fff;
   border: none;
 }
+
 .follow-btn.el-button--default {
   background: #fff;
   color: #888;
   border: 1.5px solid #dcdfe6;
 }
+
 .follow-btn.el-button--default:hover {
   color: #409eff;
   border-color: #409eff;
   background: #f4f8ff;
 }
+
 .follow-btn:not(.el-button--default):hover {
   background: #66b1ff;
 }
+
 .video-loading-mask {
   position: absolute;
-  left: 0; top: 0; right: 0; bottom: 0;
-  width: 100%; height: 100%;
-  background: rgba(255,255,255,0.18);
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.18);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1060,6 +1065,7 @@ function goToUserProfile() {
   z-index: 1000;
   pointer-events: none;
 }
+
 .video-loading-spinner {
   width: 54px;
   height: 54px;
@@ -1090,12 +1096,19 @@ function goToUserProfile() {
   animation: spin 0.8s linear infinite;
   margin-bottom: 14px;
   background: transparent;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.10);
 }
+
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
+
 .video-loading-text {
   color: #409EFF;
   font-size: 16px;
@@ -1103,4 +1116,4 @@ function goToUserProfile() {
   text-shadow: 0 2px 8px #fff;
   letter-spacing: 2px;
 }
-</style> 
+</style>
