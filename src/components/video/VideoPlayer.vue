@@ -1,22 +1,34 @@
 <template>
+<div class="plyr-host">
+  <div
+    v-if="poster && showPosterOverlay"
+    class="poster-overlay"
+    :style="{
+      backgroundImage: `url(${poster})`,
+    }"
+  ></div>
   <vue-plyr :options="plyrOptions">
-    <video
-      :poster="poster"
-      playsinline
-      :autoplay="autoplay"
-      controls
+      <video
+        :poster="poster"
+        playsinline
+        :autoplay="autoplay"
+      preload="metadata"
+        controls
       @play="onPlay"
-    >
-      <source v-for="(src, key) in sources" :key="key" :src="src.url" :size="key.replace(/[^0-9]/g, '')" />
-    </video>
-  </vue-plyr>
+      @canplay="onCanPlay"
+      >
+        <source v-for="(src, key) in sources" :key="key" :src="src.url" :size="key.replace(/[^0-9]/g, '')" />
+      </video>
+    </vue-plyr>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps } from 'vue'
+import { ref } from 'vue'
 import { logVideoView } from '@/api/video'
 
 const hasReported = ref(false)
+const showPosterOverlay = ref(true)
 
 const props = defineProps({
   sources: {
@@ -56,42 +68,53 @@ const onPlay = async () => {
     } catch (e) {}
   }
 }
+
+const onCanPlay = () => {
+  showPosterOverlay.value = false
+}
 </script>
 
 <style scoped>
-/* .video-player-wrapper {
+.plyr-host {
   width: 100%;
-  background: #000;
+  height: 100%;
   position: relative;
-  outline: none;
 }
-.video-container {
-  position: relative;
-  width: 100%;
-  background: #000;
-}
-.video-element {
-  width: 100%;
-  max-height: 480px;
-  background: #000;
-}
-.controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(0,0,0,0.7);
-  padding: 8px;
-  color: #fff;
-}
-.buffering {
+
+.poster-overlay {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  color: #fff;
-  background: rgba(0,0,0,0.6);
-  padding: 8px 16px;
-  border-radius: 6px;
-  z-index: 10;
-} */
-</style> 
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(28px) brightness(0.9) saturate(1.1);
+  transform: scale(1.05);
+  transform-origin: center;
+  z-index: 1;
+}
+
+::v-deep(.plyr) {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 2;
+}
+
+::v-deep(.plyr__video-wrapper) {
+  height: 100%;
+  background: transparent !important;
+}
+
+::v-deep(video) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+::v-deep(.plyr--video) {
+  background: transparent !important;
+}
+</style>

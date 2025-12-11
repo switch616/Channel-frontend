@@ -61,9 +61,9 @@ export const constantRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/video/:id',
-    name: 'VideoPlay',
+    name: 'VideoDetail',
     meta: { requiresAuth: true, showNavBar: true }, 
-    component: () => import('@/views/video/VideoPlay.vue')
+    component: () => import('@/views/video/VideoDetail.vue')
   },
   {
     path: '/:pathMatch(.*)*',

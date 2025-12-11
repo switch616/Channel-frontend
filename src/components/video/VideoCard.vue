@@ -54,7 +54,7 @@ const handleCardClick = () => {
   if (!token) {
     router.push({ name: 'Login' })
   } else {
-    router.push({ name: 'VideoPlay', params: { id: props.video.id } })
+    router.push({ name: 'VideoDetail', params: { id: props.video.id } })
   }
 }
 

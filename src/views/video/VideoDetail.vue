@@ -48,7 +48,7 @@
           </template>
         </div>
       </div>
-      <div class="video-section-outer">
+      <div class="video-section-outer fixed-canvas">
         <div class="video-section-inner">
           <div class="video-blur-bg" :style="{ backgroundImage: `url('${previewImg}')` }"></div>
           <div v-if="!isPlaying" class="video-player-real">
@@ -64,9 +64,7 @@
           </div>
           <div v-else class="video-player-real">
             <div class="video-player-wrapper">
-              <video :src="videoSource['720p']?.url" :poster="previewImg" class="video-element" controls autoplay loop
-                muted playsinline @waiting="handleWaiting" @playing="handlePlaying" @canplay="handleCanPlay"
-                @loadeddata="handleLoadedData" />
+              <VideoPlayer :sources="videoSource" :poster="previewImg" :autoplay="true" :video-id="videoId" />
             </div>
           </div>
         </div>
@@ -164,6 +162,7 @@ import { storeToRefs } from 'pinia'
 import dayjs from 'dayjs'
 import { followUser } from '@/api/user'
 import { eventBus, EVENTS } from '@/utils/eventBus'
+import VideoPlayer from '@/components/video/VideoPlayer.vue'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')
 function resolveUrl(path: any) {
@@ -179,41 +178,6 @@ const route = useRoute()
 const videoId = route.params.id as string
 const videoDetail = ref<any | null>(null)
 const loading = ref(true)
-const videoReady = ref(false)
-let loadingTimeout: number | null = null
-
-function handleWaiting() {
-  // 只有在视频真正缓冲时才显示加载状态
-  if (videoReady.value) {
-    // 清除之前的定时器
-    if (loadingTimeout) {
-      clearTimeout(loadingTimeout)
-    }
-    // 延迟显示加载状态，避免快速切换
-    loadingTimeout = setTimeout(() => {
-      loading.value = true
-    }, 200)
-  }
-}
-
-function handlePlaying() {
-  // 清除定时器
-  if (loadingTimeout) {
-    clearTimeout(loadingTimeout)
-    loadingTimeout = null
-  }
-  loading.value = false
-}
-
-function handleCanPlay() {
-  videoReady.value = true
-  loading.value = false
-}
-
-function handleLoadedData() {
-  videoReady.value = true
-  loading.value = false
-}
 
 const isPlaying = ref(false)
 
@@ -263,10 +227,6 @@ onMounted(async () => {
 // 组件卸载时移除事件监听和清理定时器
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
-  if (loadingTimeout) {
-    clearTimeout(loadingTimeout)
-    loadingTimeout = null
-  }
 })
 
 const previewImg = computed(() => resolveUrl(videoDetail.value?.cover_image))
@@ -753,16 +713,23 @@ function goToUserProfile() {
   align-items: center;
   width: 100%;
   background: transparent;
+  max-width: 890px;
+  margin: 0 auto;
 }
 
 .video-section-inner {
   border-radius: 20px;
   overflow: hidden;
   position: relative;
-  background: #000;
+  background: transparent;
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  max-width: 900px;
+  height: 500px;
+  max-height: 500px;
+  aspect-ratio: 9 / 5;
 }
 
 .video-blur-bg {
@@ -775,7 +742,11 @@ function goToUserProfile() {
   height: 100%;
   background-size: cover;
   background-position: center;
-  filter: blur(32px) brightness(0.7);
+  background-repeat: no-repeat;
+  filter: blur(40px) brightness(0.88) saturate(1.15);
+  transform: scale(1.1);
+  transform-origin: center;
+  background-color: #0f1115;
   z-index: 1;
   pointer-events: none;
   border-radius: 20px;
