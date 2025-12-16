@@ -29,10 +29,10 @@
       </template>
       <div class="comment-list">
         <template v-if="comments.length">
-          <CommentItem v-for="comment in comments" :key="comment.id" :comment="comment" :level="0"
+          <!-- <CommentItem v-for="comment in comments" :key="comment.id" :comment="comment" :level="0"
             :children="comment.children || []" :userId="currentUserId" :videoOwnerId="currentVideoOwnerId"
             @like="handleLikeComment" @dislike="handleDislikeComment" @reply="handleReplyComment"
-            @delete="handleDeleteComment" />
+            @delete="handleDeleteComment" /> -->
         </template>
         <div v-else class="no-comment">暂无评论</div>
       </div>
@@ -55,7 +55,7 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import CommentItem from '@/components/video/CommentItem.vue'
+// import CommentItem from '@/components/video/CommentItem.vue'
 
 import {
   getHotVideos,
@@ -251,7 +251,7 @@ async function switchVideo(idx: number): Promise<void> {
   currentIndex.value = idx
 
   nextTick(() => onCanPlay(idx))
-  await loadComments()
+  // await loadComments()
 }
 
 /* -------------------------------------------
@@ -419,7 +419,6 @@ onBeforeUnmount(() => {
   justify-content: center;
   border-radius: 24px;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.18), 0 2px 8px 0 rgba(255, 255, 255, 0.08);
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
   margin: 0;
   padding: 0;
   overflow: hidden;

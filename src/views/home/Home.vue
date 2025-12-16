@@ -32,7 +32,7 @@ const isActive = (name: string) => route.name === name
 <style scoped>
 .home-layout {
   display: flex;
-  min-height: 100vh;
+  height: calc(100vh - 60px);
   background: #f5f5f5;
 }
 .sidebar {
@@ -41,10 +41,6 @@ const isActive = (name: string) => route.name === name
   border-right: 1px solid #eee;
   padding: 28.8px 0 0 0; /* 32*0.9 */
   box-shadow: 1.8px 0 7.2px 0 rgba(0,0,0,0.03); /* 2,8*0.9 */
-  /* position: fixed; */
-  /* top: 64px; */
-  /* left: 0; */
-  /* height: calc(100vh - 64px); */
   z-index: 999;
   display: flex;
   flex-direction: column;
@@ -86,7 +82,7 @@ const isActive = (name: string) => route.name === name
   flex: 1;
   padding: 0 0 0 0;
   min-width: 0;
-  /* margin-left: 180px; */
+  overflow: auto;
   display: flex;
   flex-direction: column;
 }
