@@ -15,112 +15,30 @@
           <div class="video-desc">{{ video.description }}</div>
           <div class="video-user">@{{ video.user }}</div>
         </div>
-        <!-- 移除右侧点赞、收藏、评论等侧边栏 -->
-        <!-- <div class="video-actions" :class="{ collapsed: actionsCollapsed }"> ... </div> -->
+        <!-- 右侧点赞、收藏、评论等侧边栏 -->
       </div>
     </div>
-    <!-- 移除swiper-indicator计数 -->
-    <!-- <div class="swiper-indicator">{{ currentIndex+1 }}/{{ videoList.length }}</div> -->
+    <!-- swiper-indicator计数 -->
+
     <!-- 评论弹窗 -->
-    <el-dialog v-model="showCommentDialog" width="480px" :close-on-click-modal="true" class="comment-dialog"
-      append-to-body>
-      <template #header>
-        <span>评论区</span>
-      </template>
-      <div class="comment-list">
-        <template v-if="comments.length">
-          <!-- <CommentItem v-for="comment in comments" :key="comment.id" :comment="comment" :level="0"
-            :children="comment.children || []" :userId="currentUserId" :videoOwnerId="currentVideoOwnerId"
-            @like="handleLikeComment" @dislike="handleDislikeComment" @reply="handleReplyComment"
-            @delete="handleDeleteComment" /> -->
-        </template>
-        <div v-else class="no-comment">暂无评论</div>
-      </div>
-      <div class="comment-input-section">
-        <el-input v-model="commentText" placeholder="说点什么..." type="textarea" :rows="2" maxlength="200" show-word-limit
-          class="comment-input" />
-        <div class="comment-actions">
-          <el-button type="primary" size="small" @click="submitComment">发送</el-button>
-        </div>
-      </div>
-    </el-dialog>
-    <div v-if="loading" class="video-loading-mask">
-      <div class="video-loading-spinner"></div>
-      <div class="video-loading-text">缓冲中...</div>
-    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-// import CommentItem from '@/components/video/CommentItem.vue'
+import type { VideoItem, RawVideoItem } from '@/types/models/video.ts'
+import type { CommentItemType } from '@/types/models/comment.ts'
 
 import {
   getHotVideos,
   getVideoCommentTree,
-  addComment,
-  likeComment as likeCommentAPI,
-  dislikeComment as dislikeCommentAPI,
-  deleteComment as deleteCommentAPI,
-  favoriteVideo,
-  likeVideo as likeVideoAPI
 } from '@/api/video'
 
 /* -------------------------------------------
    类型定义（企业级, 强类型）
 ------------------------------------------- */
-interface RawVideoItem {
-  id: number
-  title: string
-  uploader_username: string
-  description?: string
-  cover_image: string
-  file_path: string
-}
-
-interface VideoItem {
-  id: number
-  title: string
-  user: string
-  description: string
-  cover_image: string
-  videoUrl: string
-}
-
-interface RawCommentUser {
-  id: number
-  username: string
-  profile_picture?: string
-}
-
-interface RawComment {
-  id: number
-  video_id: number
-  content: string
-  created_at: string
-  like_count: number
-  dislike_count: number
-  reply_count: number
-  user_id: number
-  user?: RawCommentUser
-  children?: RawComment[]
-}
-
-interface CommentItemType {
-  id: number
-  video_id: number
-  content: string
-  username: string
-  avatar?: string
-  user_id: number
-  time: string
-  likes?: number      // 改这里
-  dislikes?: number   // 改这里
-  replyCount: number
-  children: CommentItemType[]
-}
 
 
 
@@ -132,14 +50,8 @@ const currentIndex = ref<number>(0)
 const swiperRef = ref<HTMLDivElement | null>(null)
 const videoRefs = ref<HTMLVideoElement[]>([])
 
-const showCommentDialog = ref(false)
 const comments = ref<CommentItemType[]>([])
-const commentText = ref<string>('')
 
-const currentUserId = ref<number>(1)
-const currentVideoOwnerId = ref<number>(1)
-
-const actionsCollapsed = ref<boolean>(false)
 const loading = ref<boolean>(false)
 const videoReady = ref<boolean>(false)
 
@@ -286,27 +198,6 @@ function handleKeydown(e: KeyboardEvent): void {
 /* -------------------------------------------
    视频操作（点赞、收藏）
 ------------------------------------------- */
-async function likeVideo(): Promise<void> {
-  const video = videoList.value[currentIndex.value]
-  if (!video) return
-  try {
-    await likeVideoAPI(video.id)
-    ElMessage.success('点赞成功')
-  } catch {
-    ElMessage.error('点赞失败')
-  }
-}
-
-async function collectVideo(): Promise<void> {
-  const video = videoList.value[currentIndex.value]
-  if (!video) return
-  try {
-    await favoriteVideo(video.id)
-    ElMessage.success('收藏成功')
-  } catch {
-    ElMessage.error('收藏失败')
-  }
-}
 
 /* -------------------------------------------
    评论区
@@ -342,58 +233,9 @@ function mapComment(item: RawComment): CommentItemType {
   }
 }
 
-
-
-async function submitComment(): Promise<void> {
-  const video = videoList.value[currentIndex.value]
-  if (!video) return
-  if (!commentText.value.trim()) return
-
-  await addComment(video.id, {
-    content: commentText.value,
-    parent_id: null
-  })
-
-  commentText.value = ''
-  await loadComments()
-  ElMessage.success('评论成功！')
-}
-
 /* -------------------------------------------
    评论点赞 / 回复 / 删除
 ------------------------------------------- */
-async function handleLikeComment(comment: CommentItemType): Promise<void> {
-  await likeCommentAPI(comment.id)
-  await loadComments()
-}
-
-async function handleDislikeComment(comment: CommentItemType): Promise<void> {
-  await dislikeCommentAPI(comment.id)
-  await loadComments()
-}
-
-async function handleReplyComment({
-  parent,
-  content
-}: {
-  parent: CommentItemType
-  content: string
-}): Promise<void> {
-  const video = videoList.value[currentIndex.value]
-  if (!video) return
-
-  await addComment(video.id, {
-    content,
-    parent_id: parent.id
-  })
-
-  await loadComments()
-}
-
-async function handleDeleteComment(comment: CommentItemType): Promise<void> {
-  await deleteCommentAPI(comment.id)
-  await loadComments()
-}
 
 /* -------------------------------------------
    生命周期
@@ -425,10 +267,6 @@ onBeforeUnmount(() => {
 }
 
 /* 移除悬浮变大效果 */
-/* .shuashipin-container:hover {
-  box-shadow: 0 16px 48px 0 rgba(0,0,0,0.28), 0 4px 16px 0 rgba(255,255,255,0.12);
-  transform: translateY(-6px) scale(1.015);
-} */
 .video-swiper {
   width: 100%;
   height: 100%;
@@ -499,10 +337,6 @@ onBeforeUnmount(() => {
 }
 
 /* 移除视频悬浮变大效果 */
-/* .video-player-wrapper:hover {
-  box-shadow: 0 16px 48px 0 rgba(0,0,0,0.28), 0 4px 16px 0 rgba(255,255,255,0.12);
-  transform: translateY(-6px) scale(1.015);
-} */
 .video-player {
   width: 100%;
   height: 100%;
@@ -564,9 +398,7 @@ onBeforeUnmount(() => {
   right: 0;
   background: rgba(0, 0, 0, 0.02);
   padding: 7.2px 1.8px;
-  /* 8,2*0.9 */
   min-width: 36px;
-  /* 40*0.9 */
 }
 
 .collapse-btn {
@@ -574,9 +406,7 @@ onBeforeUnmount(() => {
   border: none;
   color: #fff;
   font-size: 16.2px;
-  /* 18*0.9 */
   margin-bottom: 7.2px;
-  /* 8*0.9 */
   cursor: pointer;
   outline: none;
   transition: color 0.2s;
@@ -610,17 +440,12 @@ onBeforeUnmount(() => {
 .swiper-indicator {
   position: absolute;
   right: 21.6px;
-  /* 24*0.9 */
   bottom: 28.8px;
-  /* 32*0.9 */
   color: #fff;
   font-size: 14.4px;
-  /* 16*0.9 */
   background: rgba(0, 0, 0, 0.3);
   padding: 3.6px 10.8px;
-  /* 4,12*0.9 */
   border-radius: 10.8px;
-  /* 12*0.9 */
   z-index: 20;
 }
 
