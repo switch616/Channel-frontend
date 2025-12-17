@@ -1,68 +1,103 @@
 <template>
   <div class="shuashipin-container">
-    <div class="video-swiper" ref="swiperRef">
-      <div v-for="(video, idx) in videoList" :key="video.id" class="video-item"
-        :class="{ active: idx === currentIndex }" @wheel.passive="onWheel(idx, $event)" v-show="idx === currentIndex">
-        <div class="video-bg-blur" :style="{ backgroundImage: `url('${video.cover_image}')` }"></div>
+    <div class="video-swiper" ref="swiperRef" @wheel.passive="onWheel">
+      <div v-for="(slot, _idx) in videoSlots" :key="slot.type" class="video-item"
+        :class="{ active: slot.type === 'current' }">
+        <div v-if="slot.video" class="video-bg-blur" :style="{ backgroundImage: `url('${slot.video.cover_image}')` }">
+        </div>
+
         <div class="video-player-wrapper">
-          <video ref="el => videoRefs[idx] = el" :src="video.videoUrl" :poster="video.cover_image" class="video-player"
-            controls autoplay loop muted playsinline @canplay="onCanPlay(idx)" @waiting="handleWaiting"
-            @playing="handlePlaying" @loadeddata="handleLoadedData" />
+          <video v-if="slot.video" ref="el => videoRefs[idx] = el" :src="slot.video.videoUrl"
+            :poster="slot.video.cover_image" class="video-player" autoplay muted playsinline @canplay="onCanPlay"
+            @waiting="handleWaiting" @playing="handlePlaying" @loadeddata="handleLoadedData" />
         </div>
-        <!-- 左下角视频信息区 -->
-        <div class="video-info-box">
-          <div class="video-title" @click="goToDetail(video.id)">{{ video.title }}</div>
-          <div class="video-desc">{{ video.description }}</div>
-          <div class="video-user">@{{ video.user }}</div>
+
+        <!-- 只在 current slot 显示信息 -->
+        <div v-if="slot.type === 'current' && slot.video" class="video-info-box">
+          <div class="video-title" @click="goToDetail(slot.video.id)">
+            {{ slot.video.title }}
+          </div>
+          <div class="video-desc">{{ slot.video.description }}</div>
+          <div class="video-user">@{{ slot.video.user }}</div>
         </div>
-        <!-- 右侧点赞、收藏、评论等侧边栏 -->
       </div>
     </div>
-    <!-- swiper-indicator计数 -->
-
-    <!-- 评论弹窗 -->
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import type { VideoItem, RawVideoItem } from '@/types/models/video.ts'
-import type { CommentItemType } from '@/types/models/comment.ts'
+import type { VideoItem, RawVideoItem, VideoSlot } from '@/types/models/video'
+import type { CommentItemType, RawComment } from '@/types/models/comment'
+import { getHotVideos, getVideoCommentTree } from '@/api/video'
 
-import {
-  getHotVideos,
-  getVideoCommentTree,
-} from '@/api/video'
-
-/* -------------------------------------------
-   类型定义（企业级, 强类型）
-------------------------------------------- */
-
-
-
-/* -------------------------------------------
-   响应式状态
-------------------------------------------- */
+/* =========================================================
+ * 状态定义（Feed + Slot 架构）
+ * ---------------------------------------------------------
+ * videoList  : 后端返回的完整 Feed 数据
+ * cursor     : 当前正在播放的视频在 Feed 中的位置
+ * videoSlots : 页面中真实存在的 3 个 video 渲染窗口
+ * ========================================================= */
 const videoList = ref<VideoItem[]>([])
-const currentIndex = ref<number>(0)
-const swiperRef = ref<HTMLDivElement | null>(null)
+const cursor = ref<number>(0)
+
+/**
+ * videoSlots 永远只维护 3 个元素：
+ * - prev    : 上一条视频（预加载）
+ * - current : 当前播放视频
+ * - next    : 下一条视频（预加载）
+ *
+ * DOM 不变，只替换内容，是性能的关键
+ */
+const videoSlots = ref<VideoSlot[]>([
+  { type: 'prev', video: null },
+  { type: 'current', video: null },
+  { type: 'next', video: null }
+])
+
+/**
+ * videoRefs 与 videoSlots 一一对应：
+ * index 0 -> prev
+ * index 1 -> current
+ * index 2 -> next
+ */
 const videoRefs = ref<HTMLVideoElement[]>([])
 
+const swiperRef = ref<HTMLDivElement | null>(null)
+
+/* 评论数据（与播放架构解耦） */
 const comments = ref<CommentItemType[]>([])
 
+/* 播放状态控制 */
 const loading = ref<boolean>(false)
 const videoReady = ref<boolean>(false)
 
+/* 延迟显示 loading 的定时器 */
 let loadingTimeout: number | null = null
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')
 const router = useRouter()
 
-/* -------------------------------------------
-   工具函数：处理延迟缓冲显示
-------------------------------------------- */
+/* =========================================================
+ * Slot 同步逻辑（核心方法）
+ * ---------------------------------------------------------
+ * 根据 cursor，将 Feed 数据映射到 3 个 Slot
+ * 这是整个“抖音式刷视频”的中枢
+ * ========================================================= */
+function syncSlots(): void {
+  videoSlots.value[0].video = videoList.value[cursor.value - 1] ?? null
+  videoSlots.value[1].video = videoList.value[cursor.value] ?? null
+  videoSlots.value[2].video = videoList.value[cursor.value + 1] ?? null
+}
+
+/* =========================================================
+ * 视频缓冲 & Loading 状态处理
+ * ---------------------------------------------------------
+ * waiting  : 网络或解码阻塞（延迟显示 loading，避免闪烁）
+ * playing  : 正常播放
+ * loaded   : 数据加载完成
+ * ========================================================= */
 function handleWaiting(): void {
   if (!videoReady.value) return
 
@@ -86,23 +121,78 @@ function handleLoadedData(): void {
   loading.value = false
 }
 
-/* -------------------------------------------
-   页面行为
-------------------------------------------- */
+/* =========================================================
+ * 播放控制策略
+ * ---------------------------------------------------------
+ * 规则：
+ * - 只允许 current slot 播放
+ * - prev / next 必须暂停并重置
+ * ========================================================= */
+function onCanPlay(): void {
+  videoRefs.value.forEach((video, idx) => {
+    if (!video) return
+
+    if (videoSlots.value[idx].type === 'current') {
+      video.play().catch(() => {})
+    } else {
+      video.pause()
+      video.currentTime = 0
+    }
+  })
+}
+
+/* =========================================================
+ * Feed 推进（上下刷）
+ * ---------------------------------------------------------
+ * 不操作 DOM
+ * 只推进 cursor，然后同步 Slot
+ * ========================================================= */
+function nextVideo(): void {
+  if (cursor.value < videoList.value.length - 1) {
+    cursor.value++
+    videoReady.value = false
+    syncSlots()
+    loadComments()
+  }
+}
+
+function prevVideo(): void {
+  if (cursor.value > 0) {
+    cursor.value--
+    videoReady.value = false
+    syncSlots()
+    loadComments()
+  }
+}
+
+/**
+ * 鼠标滚轮控制刷视频
+ * 移动端可直接替换为 touch 手势
+ */
+function onWheel(e: WheelEvent): void {
+  if (e.deltaY > 0) nextVideo()
+  else prevVideo()
+}
+
+/* =========================================================
+ * 页面行为
+ * ========================================================= */
 function goToDetail(id: number): void {
   router.push(`/video/${id}`)
 }
 
-/* -------------------------------------------
-   视频数据获取
-------------------------------------------- */
+/* =========================================================
+ * 数据获取
+ * ---------------------------------------------------------
+ * 首次进入页面加载 Feed
+ * ========================================================= */
 async function fetchVideos(): Promise<void> {
   const res = await getHotVideos({ page: 1, size: 20 })
   if (!res?.success) return
 
-  const items = (res.data?.items ?? []) as any as RawVideoItem[]
+  const items = res.data?.items as RawVideoItem[]
 
-  videoList.value = items.map((item) => ({
+  videoList.value = items.map(item => ({
     id: item.id,
     title: item.title,
     user: item.uploader_username,
@@ -111,11 +201,14 @@ async function fetchVideos(): Promise<void> {
     videoUrl: genUrl(item.file_path)
   }))
 
-  if (videoList.value.length > 0) {
-    await loadComments()
-  }
+  cursor.value = 0
+  syncSlots()
+  loadComments()
 }
 
+/**
+ * 统一处理后端返回的相对路径
+ */
 function genUrl(path: string): string {
   if (!path) return ''
   return /^https?:\/\//.test(path)
@@ -123,97 +216,20 @@ function genUrl(path: string): string {
     : `${baseUrl}/${path.replace(/^\/+/, '')}`
 }
 
-/* -------------------------------------------
-   滚轮切换视频
-------------------------------------------- */
-function onWheel(idx: number, e: WheelEvent): void {
-  if (e.deltaY > 0 && currentIndex.value < videoList.value.length - 1) {
-    switchVideo(currentIndex.value + 1)
-  } else if (e.deltaY < 0 && currentIndex.value > 0) {
-    switchVideo(currentIndex.value - 1)
-  }
-}
-
-/* -------------------------------------------
-   视频播放控制
-------------------------------------------- */
-function onCanPlay(idx: number): void {
-  videoRefs.value.forEach((v, i) => {
-    if (!v) return
-
-    if (i === currentIndex.value) {
-      videoReady.value = true
-      loading.value = false
-      v.play().catch(err => console.warn('视频播放失败:', err))
-    } else {
-      v.pause()
-    }
-  })
-}
-
-async function switchVideo(idx: number): Promise<void> {
-  if (idx < 0 || idx >= videoList.value.length) return
-
-  videoReady.value = false
-  if (loadingTimeout) {
-    clearTimeout(loadingTimeout)
-    loadingTimeout = null
-  }
-
-  currentIndex.value = idx
-
-  nextTick(() => onCanPlay(idx))
-  // await loadComments()
-}
-
-/* -------------------------------------------
-   键盘事件
-------------------------------------------- */
-function handleKeydown(e: KeyboardEvent): void {
-  const keys = ['Space', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']
-  if (keys.includes(e.code)) e.preventDefault()
-
-  const curVideo = videoRefs.value[currentIndex.value]
-  if (!curVideo) return
-
-  switch (e.code) {
-    case 'ArrowUp':
-      switchVideo(currentIndex.value - 1)
-      break
-    case 'ArrowDown':
-      switchVideo(currentIndex.value + 1)
-      break
-    case 'Space':
-      curVideo.paused ? curVideo.play() : curVideo.pause()
-      break
-    case 'ArrowRight':
-      if (videoReady.value) curVideo.currentTime = Math.min(curVideo.duration, curVideo.currentTime + 5)
-      break
-    case 'ArrowLeft':
-      if (videoReady.value) curVideo.currentTime = Math.max(0, curVideo.currentTime - 5)
-      break
-  }
-}
-
-/* -------------------------------------------
-   视频操作（点赞、收藏）
-------------------------------------------- */
-
-/* -------------------------------------------
-   评论区
-------------------------------------------- */
+/* =========================================================
+ * 评论模块（与视频播放解耦）
+ * ========================================================= */
 async function loadComments(): Promise<void> {
-  const video = videoList.value[currentIndex.value]
+  const video = videoList.value[cursor.value]
   if (!video) return
 
   const res = await getVideoCommentTree(video.id)
-
   if (!res?.success) {
     comments.value = []
     return
   }
 
-  const raw = (res.data ?? []) as RawComment[]
+  const raw = res.data as RawComment[]
   comments.value = raw.map(mapComment)
 }
 
@@ -233,13 +249,18 @@ function mapComment(item: RawComment): CommentItemType {
   }
 }
 
-/* -------------------------------------------
-   评论点赞 / 回复 / 删除
-------------------------------------------- */
+/* =========================================================
+ * 键盘交互（PC 端辅助）
+ * ========================================================= */
+function handleKeydown(e: KeyboardEvent): void {
+  if (['ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault()
+  if (e.code === 'ArrowDown') nextVideo()
+  if (e.code === 'ArrowUp') prevVideo()
+}
 
-/* -------------------------------------------
-   生命周期
-------------------------------------------- */
+/* =========================================================
+ * 生命周期
+ * ========================================================= */
 onMounted(() => {
   fetchVideos()
   window.addEventListener('keydown', handleKeydown)
@@ -250,6 +271,9 @@ onBeforeUnmount(() => {
   if (loadingTimeout) clearTimeout(loadingTimeout)
 })
 </script>
+
+
+
 
 <style scoped>
 .shuashipin-container {
