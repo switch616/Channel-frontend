@@ -15,9 +15,9 @@ export const constantRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/',
-    name: 'Home',
+    name: 'Index',
     meta: { requiresAuth: true, showNavBar: true },  // 首页显示 NavBar
-    component: () => import('@/views/home/Home.vue'),
+    component: () => import('@/views/home/Index.vue'),
     children: [
       {
         path: '',
