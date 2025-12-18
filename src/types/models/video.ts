@@ -151,3 +151,13 @@ export interface VideoItem {
   /** 视频播放地址 */
   videoUrl: string
 }
+
+/* -------------------------------------------
+   Slot 模型（核心）
+------------------------------------------- */
+type SlotType = 'prev' | 'current' | 'next'
+
+export interface VideoSlot {
+  type: SlotType
+  video: VideoItem | null
+}
