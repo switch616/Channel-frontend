@@ -1,13 +1,24 @@
 <template>
   <div class="home-layout">
-    <aside class="sidebar">
+    <aside class="sidebar" :class="{ collapsed }">
+      <!-- 中线收起 / 展开触发器 -->
+      <div class="collapse-trigger" @click="toggleSidebar">
+        <span class="arrow" :class="{ collapsed }"></span>
+      </div>
+
       <ul class="sidebar-menu">
-        <li v-for="item in menuList" :key="item.name" :class="{active: isActive(item.name)}" @click="goSection(item.name)">
+        <li
+          v-for="item in menuList"
+          :key="item.name"
+          :class="{ active: isActive(item.name) }"
+          @click="goSection(item.name)"
+        >
           <component :is="item.icon" class="sidebar-icon" />
-          <span>{{ item.title }}</span>
+          <span v-if="!collapsed">{{ item.title }}</span>
         </li>
       </ul>
     </aside>
+
     <main class="main-content">
       <router-view />
     </main>
@@ -15,6 +26,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { sidebarMenu } from './sidebarMenu'
 
@@ -23,9 +35,17 @@ const menuList = sidebarMenu
 const router = useRouter()
 const route = useRoute()
 
+/** 侧边栏是否收起（默认展开） */
+const collapsed = ref(false)
+
+const toggleSidebar = () => {
+  collapsed.value = !collapsed.value
+}
+
 const goSection = (name: string) => {
   router.push({ name })
 }
+
 const isActive = (name: string) => route.name === name
 </script>
 
@@ -35,55 +55,113 @@ const isActive = (name: string) => route.name === name
   height: calc(100vh - 60px);
   background: #f5f5f5;
 }
+
+/* ================= sidebar ================= */
 .sidebar {
-  width: 162px; /* 180*0.9 */
+  width: 162px;
   background: #fff;
   border-right: 1px solid #eee;
-  padding: 28.8px 0 0 0; /* 32*0.9 */
-  box-shadow: 1.8px 0 7.2px 0 rgba(0,0,0,0.03); /* 2,8*0.9 */
+  padding-top: 28.8px;
+  box-shadow: 1.8px 0 7.2px rgba(0, 0, 0, 0.03);
   z-index: 999;
   display: flex;
   flex-direction: column;
+  position: relative;
+  transition: width 0.25s ease;
 }
+
+.sidebar.collapsed {
+  width: 54px;
+}
+
+/* ===== 中线触发器 ===== */
+.collapse-trigger {
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 48px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.collapse-trigger:hover {
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* 箭头 */
+.arrow {
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 6px solid #409eff;
+  transition: transform 0.2s ease;
+}
+
+/* 收起态：箭头反向 */
+.arrow.collapsed {
+  transform: rotate(180deg);
+}
+
+/* ================= menu ================= */
 .sidebar-menu {
   list-style: none;
-  padding: 0 0 0 21.6px; /* 24*0.9 */
+  padding: 0 0 0 21.6px;
   margin: 0;
   user-select: none;
 }
+
+.sidebar.collapsed .sidebar-menu {
+  padding-left: 10px;
+}
+
 .sidebar-menu li {
   display: flex;
   align-items: center;
-  gap: 7.2px; /* 8*0.9 */
-  padding: 9px 0 9px 7.2px; /* 10,8*0.9 */
+  gap: 7.2px;
+  padding: 9px 7.2px;
   cursor: pointer;
   color: #666;
-  font-size: 13.5px; /* 15*0.9 */
-  border-radius: 7.2px; /* 8*0.9 */
-  margin-bottom: 7.2px; /* 8*0.9 */
+  font-size: 13.5px;
+  border-radius: 7.2px;
+  margin-bottom: 7.2px;
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
+
 .sidebar-menu li.active,
 .sidebar-menu li:hover {
   background: #eaf3ff;
   color: #409eff;
-  box-shadow: 0 1.8px 7.2px rgba(64,158,255,0.08); /* 2,8*0.9 */
+  box-shadow: 0 1.8px 7.2px rgba(64, 158, 255, 0.08);
 }
+
 .sidebar-icon {
-  width: 12.6px; /* 14*0.9 */
+  width: 12.6px;
   height: 12.6px;
   font-size: 12.6px;
-  margin-right: 1.8px; /* 2*0.9 */
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
+
+/* ================= main ================= */
 .main-content {
   flex: 1;
-  padding: 0 0 0 0;
   min-width: 0;
   overflow: auto;
   display: flex;
   flex-direction: column;
 }
-</style> 
+</style>

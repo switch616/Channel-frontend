@@ -28,7 +28,7 @@ export const constantRoutes: RouteRecordRaw[] = [
       {
         path: 'shuashipin',
         name: 'ShuaShipin',
-        component: () => import('@/views/video/ShuaShipin.vue'),
+        component: () => import('@/views/home/ShuaShipin.vue'),
         meta: { title: '刷视频', showNavBar: true }
       }
     ]
