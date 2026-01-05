@@ -53,22 +53,24 @@ const isActive = (name: string) => route.name === name
 .home-layout {
   display: flex;
   height: calc(100vh - 60px);
-  background: #f5f5f5;
+  background: #f7f8fa; 
 }
 
 /* ================= sidebar ================= */
 .sidebar {
   width: 162px;
-  background: #fff;
-  border-right: 1px solid #eee;
+  background: #ffffff;
+  border-right: none; 
   padding-top: 28.8px;
-  box-shadow: 1.8px 0 7.2px rgba(0, 0, 0, 0.03);
-  z-index: 999;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.03),
+              2px 0 8px rgba(0,0,0,0.04); /* 更柔和 */
+  z-index: 100;
   display: flex;
   flex-direction: column;
   position: relative;
   transition: width 0.25s ease;
 }
+
 
 .sidebar.collapsed {
   width: 54px;
@@ -142,10 +144,11 @@ const isActive = (name: string) => route.name === name
 
 .sidebar-menu li.active,
 .sidebar-menu li:hover {
-  background: #eaf3ff;
+  background: #eef5ff;  
   color: #409eff;
-  box-shadow: 0 1.8px 7.2px rgba(64, 158, 255, 0.08);
+  box-shadow: none;   
 }
+
 
 .sidebar-icon {
   width: 12.6px;

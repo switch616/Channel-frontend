@@ -19,7 +19,7 @@ export const sidebarMenu: MenuItem[] = [
     icon: VideoCamera,
   },
   {
-    name: "UserCenter",
+    name: "UserCenter", // 路由名
     title: "我的",
     icon: User,
   },

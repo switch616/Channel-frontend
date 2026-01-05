@@ -125,7 +125,7 @@ const openVideoUpload = () => {
   videoUploadRef.value?.open()
 }
 
-const props = defineProps<{
+defineProps<{
   user?: unknown
   readonly?: boolean
   showFollow?: boolean
@@ -199,7 +199,6 @@ const openChangePwdDialog = () => {
   gap: 8px;
 }
 
-/* 新增的姓名容器样式 */
 .name-container {
   display: flex;
   align-items: center;
@@ -212,7 +211,6 @@ const openChangePwdDialog = () => {
   font-weight: 500;
 }
 
-/* 修改后的性别图标样式 */
 .gender-icon {
   font-size: 20px;
   /* 增大图标尺寸 */

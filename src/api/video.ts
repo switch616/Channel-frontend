@@ -208,7 +208,11 @@ export const getWatchHistory = async (
 };
 
 export const logVideoView = async (
-  data: { video_id?: string | number; user_id?: string | number; watch_duration?: number } = {}
+  data: {
+    video_id?: string | number;
+    user_id?: string | number;
+    watch_duration?: number;
+  } = {}
 ): Promise<ApiResponse> => {
   return await request({
     url: "/analytics/log_video_view",
@@ -286,5 +290,13 @@ export const getFollowStatus = async (
     url: "/user/follow_status",
     method: "get",
     params: { user_id: userId },
+  });
+};
+
+// 删除视频
+export const deleteVideo = async (videoId: number): Promise<ApiResponse> => {
+  return await request({
+    url: `/video/${videoId}`,
+    method: "delete",
   });
 };

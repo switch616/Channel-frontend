@@ -1,17 +1,34 @@
 <template>
   <div class="profile-page">
-    <UserHeaderOther :user="user" :isFollowed="isFollowed" :isMutual="isMutual" :isFollower="isFollower"
-      @follow="handleFollow" @unfollow="handleUnfollow" @refresh="handleRefresh" />
+    <UserHeaderOther
+      v-if="user"
+      :user="user"
+      :isFollowed="isFollowed"
+      :isMutual="isMutual"
+      :isFollower="isFollower"
+      @follow="handleFollow"
+      @unfollow="handleUnfollow"
+      @refresh="handleRefresh"
+    />
+
     <UserTabsOther v-model="activeTab">
       <template #videos>
-        <VideoGrid :videos="videoList" :loading="loading" :finished="finished" :showRefresh="true"
-          @load-more="loadVideos" @refresh="refreshVideos" />
+        <VideoGrid
+          :videos="videoList"
+          :loading="loading"
+          :finished="finished"
+          :showRefresh="true"
+          @load-more="loadVideos"
+          @refresh="refreshVideos"
+        />
       </template>
+
       <template #likes>
         <div class="empty-state">
           <el-empty description="暂不支持查看其他用户的点赞内容" />
         </div>
       </template>
+
       <template #favorites>
         <div class="empty-state">
           <el-empty description="暂不支持查看其他用户的收藏内容" />
@@ -19,7 +36,6 @@
       </template>
     </UserTabsOther>
 
-    <!-- 回到顶部按钮 -->
     <el-backtop :right="40" :bottom="40" :visibility-height="300" />
   </div>
 </template>
@@ -37,18 +53,18 @@ import VideoGrid from '@/components/video/VideoGrid.vue'
 const baseUrl = import.meta.env.VITE_API_BASE_URL
 const route = useRoute()
 
-
-// 统一转换成 number，如果是 string[] 取第一个
+/** 路由中的 userId，统一转 number */
 const userId = Number(
   Array.isArray(route.params.userId)
     ? route.params.userId[0]
     : route.params.userId
 )
 
+/** 用户资料类型（接口层 + UI 够用即可） */
 interface UserProfile {
   id?: number
   username?: string
-  avatar?: string
+  profile_picture?: string
   is_followed?: boolean
   is_mutual?: boolean
   is_follower?: boolean
@@ -56,15 +72,16 @@ interface UserProfile {
 
 const user = ref<UserProfile | null>(null)
 
-
 const isFollowed = ref(false)
 const isMutual = ref(false)
 const isFollower = ref(false)
 const loadingProfile = ref(false)
 
+/** Tab 类型 */
 type TabName = 'videos' | 'likes' | 'favorites' | 'history'
-
 const activeTab = ref<TabName>('videos')
+
+/** 视频列表项 */
 interface VideoItem {
   id: number
   cover_image: string
@@ -75,15 +92,6 @@ interface VideoItem {
   uploadTime: string
 }
 
-interface VideoItem {
-  id: number
-  cover_image: string
-  title: string
-  user: string
-  duration: number
-  like_count: number
-  uploadTime: string
-}
 const videoList = ref<VideoItem[]>([])
 
 const page = ref(1)
@@ -92,31 +100,36 @@ const total = ref(0)
 const loading = ref(false)
 const finished = ref(false)
 
+/** 加载视频 */
 const loadVideos = async () => {
   if (loading.value || finished.value) return
   loading.value = true
+
   try {
     const res = await getUserVideos(userId, { page: page.value, size: pageSize })
-    if (!res?.success) {
-      return
-    }
+    if (!res?.success) return
+
     const data = res.data || {}
-    const mappedVideos = (data.items || data || []).map(item => {
-      let cover = (item.cover_image || '').replace(/\\/g, '/')
+    const items = data.items || data || []
+
+    const mappedVideos: VideoItem[] = items.map((item: any) => {
+      const cover = (item.cover_image || '').replace(/\\/g, '/')
       return {
         id: item.id,
         cover_image: /^https?:\/\//.test(cover)
           ? cover
           : `${baseUrl}${cover.replace(/^\/+/, '')}`,
         title: item.title,
-        user: item.uploader_username || item.user,
+        user: item.uploader_username || item.user || '',
         duration: item.duration,
         like_count: item.like_count || 0,
-        uploadTime: new Date(item.created_at ?? 0).toLocaleString(),
+        uploadTime: new Date(item.created_at ?? Date.now()).toLocaleString(),
       }
     })
+
     videoList.value.push(...mappedVideos)
-    total.value = data.total || (data.items ? data.items.length : mappedVideos.length)
+    total.value = data.total || mappedVideos.length
+
     if (videoList.value.length >= total.value) {
       finished.value = true
     } else {
@@ -129,6 +142,7 @@ const loadVideos = async () => {
   }
 }
 
+/** 刷新视频 */
 const refreshVideos = async () => {
   videoList.value = []
   page.value = 1
@@ -136,10 +150,12 @@ const refreshVideos = async () => {
   await loadVideos()
 }
 
+/** 刷新用户资料 */
 const handleRefresh = async () => {
   await fetchProfile()
 }
 
+/** 获取用户资料 */
 const fetchProfile = async () => {
   loadingProfile.value = true
   try {
@@ -148,14 +164,13 @@ const fetchProfile = async () => {
       throw new Error(res?.msg || '获取用户资料失败')
     }
 
-    user.value = res.data || {}
-    // 从用户资料响应中获取关注状态
+    user.value = res.data || null
     isFollowed.value = !!res.data?.is_followed
     isMutual.value = !!res.data?.is_mutual
     isFollower.value = !!res.data?.is_follower
   } catch (error) {
     console.error('获取用户资料失败:', error)
-    user.value = {}
+    user.value = null
     isFollowed.value = false
     isMutual.value = false
     isFollower.value = false
@@ -164,37 +179,33 @@ const fetchProfile = async () => {
   }
 }
 
+/** 关注 */
 const handleFollow = async () => {
   try {
     const res = await followUser(userId)
-    if (!res?.success) {
-      throw new Error(res?.msg || '关注失败')
-    }
+    if (!res?.success) throw new Error(res?.msg || '关注失败')
 
     if (res.data) {
       isFollowed.value = !!res.data.is_followed
       isMutual.value = !!res.data.is_mutual
       isFollower.value = !!res.data.is_follower
 
-      if (isMutual.value) {
-        ElMessage.success('互相关注成功！')
-      } else if (isFollowed.value && isFollower.value) {
-        ElMessage.success('回关成功！')
-      } else if (isFollowed.value) {
-        ElMessage.success('关注成功！')
-      }
+      if (isMutual.value) ElMessage.success('互相关注成功！')
+      else if (isFollowed.value) ElMessage.success('关注成功！')
     }
   } catch (e) {
-    console.error('关注失败:', e)
+    console.error(e)
     ElMessage.error('关注失败')
   }
 }
 
+/** 取消关注 */
 const handleUnfollow = async () => {
+  if (!user.value) return
+
   try {
-    // 添加确认弹窗
     await ElMessageBox.confirm(
-      `确定要取消关注 ${user.value!.username} 吗？`,
+      `确定要取消关注 ${user.value.username ?? ''} 吗？`,
       '取消关注',
       {
         confirmButtonText: '确定取消',
@@ -203,10 +214,8 @@ const handleUnfollow = async () => {
       }
     )
 
-    const res = await followUser(userId) // 使用同一个API，后端会根据当前状态切换
-    if (!res?.success) {
-      throw new Error(res?.msg || '取消关注失败')
-    }
+    const res = await followUser(userId)
+    if (!res?.success) throw new Error(res?.msg || '取消关注失败')
 
     if (res.data) {
       isFollowed.value = !!res.data.is_followed
@@ -216,15 +225,15 @@ const handleUnfollow = async () => {
     }
   } catch (e) {
     if (e !== 'cancel') {
-      console.error('取消关注失败:', e)
+      console.error(e)
       ElMessage.error('取消关注失败')
     }
   }
 }
 
-// 监听标签页切换
-watch(activeTab, async () => {
-  if (activeTab.value === 'videos') {
+/** Tab 切换 */
+watch(activeTab, async (val) => {
+  if (val === 'videos') {
     videoList.value = []
     page.value = 1
     finished.value = false

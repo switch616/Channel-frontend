@@ -2,24 +2,45 @@
   <div class="video-grid-wrapper">
     <!-- 刷新按钮 -->
     <div v-if="showRefresh" class="refresh-wrapper">
-      <el-button :loading="loading" type="primary" plain size="small" @click="handleRefresh" class="refresh-btn">
-        <el-icon>
-          <Refresh />
-        </el-icon>
+      <el-button
+        :loading="loading"
+        type="primary"
+        plain
+        size="small"
+        @click="handleRefresh"
+      >
+        <el-icon><Refresh /></el-icon>
         {{ loading ? '刷新中...' : '刷新' }}
       </el-button>
     </div>
 
     <el-row :gutter="20">
-      <el-col v-for="video in videos" :key="video.id" :xs="24" :sm="12" :md="8" :lg="6">
-        <VideoCard :video="video" @delete="handleDelete(video.id)" />
+      <el-col
+        v-for="video in videos"
+        :key="video.id"
+        :xs="24"
+        :sm="12"
+        :md="8"
+        :lg="6"
+      >
+        <VideoCard
+          :video="video"
+          :showDelete="showDelete"
+          @deleted="emitRefresh"
+        />
       </el-col>
     </el-row>
 
     <!-- 加载更多 -->
     <div v-if="showLoadMore" class="load-more-wrapper">
-      <el-button v-if="!finished" :loading="loading" type="primary" plain size="large" @click="handleLoadMore"
-        class="load-more-btn">
+      <el-button
+        v-if="!finished"
+        :loading="loading"
+        type="primary"
+        plain
+        size="large"
+        @click="handleLoadMore"
+      >
         {{ loading ? '加载中...' : '加载更多' }}
       </el-button>
       <div v-else class="no-more">
@@ -37,40 +58,36 @@
 <script setup lang="ts">
 import { type PropType } from 'vue'
 import VideoCard from './VideoCard.vue'
-import { deleteLike, deleteCollection, deleteHistory } from '@/api/video'
 import { Refresh } from '@element-plus/icons-vue'
 
-interface VideoItem {
-  id: number | string
-  [key: string]: unknown
+/** 与 VideoCard 严格对齐 */
+export interface VideoItem {
+  id: number
+  cover_image: string
+  title: string
+  user: string
+  duration: number
+  like_count: number
+  uploadTime: string
 }
-
-type TabType = 'videos' | 'likes' | 'favorites' | 'history'
 
 const props = defineProps({
   videos: {
     type: Array as PropType<VideoItem[]>,
     required: true,
   },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  finished: {
-    type: Boolean,
-    default: false,
-  },
+  loading: Boolean,
+  finished: Boolean,
   showLoadMore: {
     type: Boolean,
-    default: true,
-  },
-  showRefresh: {
-    type: Boolean,
     default: false,
   },
-  tabType: {
-    type: String as PropType<TabType>,
-    default: 'videos', // 新增tabType，父组件传递
+  showRefresh: Boolean,
+
+  /** 是否是“我的主页” */
+  showDelete: {
+    type: Boolean,
+    default: false,
   },
 })
 
@@ -86,31 +103,14 @@ const handleLoadMore = () => {
 }
 
 const handleRefresh = () => {
-  if (!props.loading) {
-    emit('refresh')
-  }
+  emit('refresh')
 }
 
-const handleDelete = async (id: number | string) => {
-  const numericId = Number(id)  // 永远转成 number
-
-  let res
-  if (props.tabType === 'likes') {
-    res = await deleteLike(numericId)
-  } else if (props.tabType === 'favorites') {
-    res = await deleteCollection(numericId)
-  } else if (props.tabType === 'history') {
-    res = await deleteHistory(numericId)
-  } else {
-    return
-  }
-
-  if (res?.success) {
-    emit('refresh')
-  }
+const emitRefresh = () => {
+  emit('refresh')
 }
-
 </script>
+
 
 <style scoped>
 .video-grid-wrapper {

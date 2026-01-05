@@ -3,7 +3,7 @@
     <UserHeader :user="userStore.user" />
     <UserTabs v-model="activeTab">
       <template #videos>
-        <VideoGrid :videos="videoList" :loading="loading" :finished="finished" :showRefresh="true"
+        <VideoGrid :videos="videoList" :loading="loading" :finished="finished" :showRefresh="true" :showDelete="true"
           @load-more="loadVideos" @refresh="refreshVideos" />
       </template>
       <template #likes>
